@@ -228,6 +228,11 @@ function _certificate_call_check_cones(problem, x)
     )
 end
 
+function _certificate_cone_result(result::ConeMembershipResult)
+    detail = join((diagnostic.message for diagnostic in result.diagnostics), "; ")
+    return result.is_member, detail
+end
+
 function _certificate_cone_result(result)
     if result isa Bool
         return result, ""

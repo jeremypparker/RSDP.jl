@@ -20,6 +20,7 @@ include("CertificateCheckers.jl")
 include("RationalRecovery.jl")
 include("NumericalOracles.jl")
 include("MOIExtraction.jl")
+include("MOIOptimizer.jl")
 
 export SolveStatus,
     ExactAffineStatus,
@@ -98,6 +99,20 @@ export SolveStatus,
     NumericalOracleResult,
     OracleValidationResult,
     solve_oracle,
-    validate_with_oracle
+    validate_with_oracle,
+    Optimizer,
+    ValidationStatusAttribute,
+    CertificateAttribute,
+    ValidationReportAttribute,
+    OracleResultAttribute,
+    DiagnosticsAttribute,
+    MaxDenominatorAttribute,
+    NumericalOracleAttribute,
+    ExactificationPolicyAttribute,
+    validation_status,
+    certificate,
+    validation_report,
+    oracle_result,
+    diagnostics
 
 end

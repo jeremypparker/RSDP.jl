@@ -18,6 +18,7 @@ makedocs(;
         "Home" => "index.md",
         "Quick start" => "quickstart.md",
         "Tutorials" => [
+            "RSDP Optimizer" => "tutorials/rsdp_optimizer.md",
             "JuMP rational SDP" => "tutorials/jump_rational_sdp.md",
             "Ordinary sum of squares" => "tutorials/ordinary_sos.md",
         ],

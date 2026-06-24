@@ -8,6 +8,11 @@ const MOIU = MOI.Utilities
 
 _float64(value::RSDP.ExactScalar) = Float64(value)
 
+function _objective_constant(problem::RSDP.ExactConicProblem)
+    value = get(problem.metadata, :objective_constant, zero(RSDP.ExactScalar))
+    return _float64(RSDP.exactify(value; context = "objective constant"))
+end
+
 function _identity_function(
     variables::AbstractVector{MOI.VariableIndex},
     range::UnitRange{Int},
@@ -219,7 +224,7 @@ function RSDP.solve_oracle(
         MOI.set(
             source,
             MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Float64}}(),
-            MOI.ScalarAffineFunction(objective_terms, 0.0),
+            MOI.ScalarAffineFunction(objective_terms, _objective_constant(problem)),
         )
     end
 
