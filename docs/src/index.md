@@ -20,3 +20,7 @@ objective. It does not turn primal feasibility into an optimality claim.
 
 Start with [Quick start](@ref) and read [Limitations](@ref) before relying on a
 certificate in a proof pipeline.
+
+The tutorials show a [JuMP rational SDP](@ref) and an
+[ordinary sum-of-squares example](@ref "Ordinary sum of squares") using
+Hypatia only as a numerical oracle.

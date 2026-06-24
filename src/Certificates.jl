@@ -1,11 +1,11 @@
 import SHA
 
 export CERTIFICATE_VERSION,
-    PrimalCertificate,
-    ExactPrimalCertificate,
-    make_primal_certificate
+    PrimalCertificate, ExactPrimalCertificate, make_primal_certificate
 
-"""Certificate format version emitted and accepted by this RSDP release."""
+"""
+Certificate format version emitted and accepted by this RSDP release.
+"""
 const CERTIFICATE_VERSION = v"0.1.0"
 
 """
@@ -21,13 +21,13 @@ The problem hash is deliberately left in the representation supplied by the
 problem implementation (for example, a hexadecimal string). Checkers never
 trust the metadata.
 """
-struct PrimalCertificate{H,P}
+struct PrimalCertificate{H, P}
     certificate_version::VersionNumber
     problem_hash::H
     x::Vector{Rational{BigInt}}
-    objective::Union{Nothing,Rational{BigInt}}
+    objective::Union{Nothing, Rational{BigInt}}
     exactification_policy::P
-    metadata::Dict{Symbol,Any}
+    metadata::Dict{Symbol, Any}
 end
 
 function PrimalCertificate(
@@ -36,23 +36,25 @@ function PrimalCertificate(
     objective = nothing;
     certificate_version::VersionNumber = CERTIFICATE_VERSION,
     exactification_policy = nothing,
-    metadata::AbstractDict{Symbol} = Dict{Symbol,Any}(),
+    metadata::AbstractDict{Symbol} = Dict{Symbol, Any}(),
 )
     exact_x = _certificate_exact_vector(x, "certificate primal vector")
     exact_objective =
         isnothing(objective) ? nothing :
         _certificate_exact_scalar(objective, "certificate objective")
-    return PrimalCertificate{typeof(problem_hash),typeof(exactification_policy)}(
+    return PrimalCertificate{typeof(problem_hash), typeof(exactification_policy)}(
         certificate_version,
         problem_hash,
         exact_x,
         exact_objective,
         exactification_policy,
-        Dict{Symbol,Any}(metadata),
+        Dict{Symbol, Any}(metadata),
     )
 end
 
-"""Compatibility name for the package's exact primal certificate type."""
+"""
+Compatibility name for the package's exact primal certificate type.
+"""
 const ExactPrimalCertificate = PrimalCertificate
 
 function Base.getproperty(certificate::PrimalCertificate, name::Symbol)
@@ -120,17 +122,15 @@ function make_primal_certificate(
 
     certificate_metadata = if metadata isa _CertificateAutomaticMetadata
         hasproperty(problem, :metadata) ?
-        Dict{Symbol,Any}(getproperty(problem, :metadata)) :
-        Dict{Symbol,Any}()
+        Dict{Symbol, Any}(getproperty(problem, :metadata)) : Dict{Symbol, Any}()
     elseif metadata isa AbstractDict{Symbol}
-        Dict{Symbol,Any}(metadata)
+        Dict{Symbol, Any}(metadata)
     else
         throw(ArgumentError("certificate metadata must use Symbol keys"))
     end
     exactification_policy =
         hasproperty(problem, :exactification_policy) ?
-        getproperty(problem, :exactification_policy) :
-        nothing
+        getproperty(problem, :exactification_policy) : nothing
 
     return PrimalCertificate(
         problem_hash,
@@ -148,17 +148,14 @@ function _certificate_exact_scalar(value, label::AbstractString)
         return BigInt(value) // BigInt(1)
     end
     throw(
-        ArgumentError(
-            "$label must be an integer or rational value, got $(typeof(value))",
-        ),
+        ArgumentError("$label must be an integer or rational value, got $(typeof(value))"),
     )
 end
 
 function _certificate_exact_vector(values::AbstractVector, label::AbstractString)
     result = Vector{Rational{BigInt}}(undef, length(values))
     for index in eachindex(values)
-        result[index] =
-            _certificate_exact_scalar(values[index], "$label entry $index")
+        result[index] = _certificate_exact_scalar(values[index], "$label entry $index")
     end
     return result
 end
@@ -235,7 +232,7 @@ function _certificate_objective_constant(problem)
 end
 
 function _certificate_objective_value(problem, x)
-    coefficients = _certificate_objective_coefficients(problem; required=false)
+    coefficients = _certificate_objective_coefficients(problem; required = false)
     isnothing(coefficients) && return nothing
     return _certificate_dot(coefficients, x) + _certificate_objective_constant(problem)
 end
@@ -265,16 +262,12 @@ end
 
 function _certificate_stable_problem_fingerprint(problem)
     buffer = IOBuffer()
-    _certificate_write_canonical(buffer, problem, IdDict{Any,Nothing}())
+    _certificate_write_canonical(buffer, problem, IdDict{Any, Nothing}())
     bytes = take!(buffer)
     return bytes2hex(SHA.sha256(bytes))
 end
 
-function _certificate_write_canonical(
-    io::IO,
-    value,
-    seen::IdDict{Any,Nothing},
-)
+function _certificate_write_canonical(io::IO, value, seen::IdDict{Any, Nothing})
     if value isa Rational
         print(io, "R", numerator(value), "/", denominator(value), ";")
     elseif value isa Integer
@@ -289,7 +282,7 @@ function _certificate_write_canonical(
         print(io, "N;")
     elseif value isa AbstractDict
         entries = collect(pairs(value))
-        sort!(entries; by=entry -> string(first(entry)))
+        sort!(entries; by = entry -> string(first(entry)))
         print(io, "D", string(typeof(value)), ":", length(entries), "{")
         for (key, entry_value) in entries
             _certificate_write_canonical(io, key, seen)

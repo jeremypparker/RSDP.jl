@@ -10,8 +10,15 @@ MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 SHA = "ea8e919c-243c-51af-8825-aaa63cd721ce"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
+[weakdeps]
+Hypatia = "b99e6be6-89ff-11e8-14f8-45c827f4f8f2"
+
+[extensions]
+RSDPHypatiaExt = "Hypatia"
+
 [compat]
 Aqua = "0.8"
+Hypatia = "0.9, 0.10"
 JET = "0.11"
 LinearAlgebra = "1.10"
 Logging = "1.10"
@@ -23,8 +30,9 @@ julia = "1.12"
 
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
+Hypatia = "b99e6be6-89ff-11e8-14f8-45c827f4f8f2"
 JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Aqua", "JET", "Test"]
+test = ["Aqua", "Hypatia", "JET", "Test"]

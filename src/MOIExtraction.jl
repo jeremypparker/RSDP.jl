@@ -1,10 +1,7 @@
 import MathOptInterface as MOI
 
 export MOIExtractedProblem,
-    extract_moi,
-    extract_moi_problem,
-    equivalent,
-    recover_moi_variables
+    extract_moi, extract_moi_problem, equivalent, recover_moi_variables
 
 """
     MOIExtractedProblem
@@ -40,7 +37,7 @@ struct MOIExtractedProblem
     negative_columns::UnitRange{Int}
     block_columns::Vector{UnitRange{Int}}
     block_sources::Vector{Any}
-    row_sources::Vector{Tuple{Any,Int}}
+    row_sources::Vector{Tuple{Any, Int}}
 
     function MOIExtractedProblem(
         problem::ExactConicProblem,
@@ -52,15 +49,14 @@ struct MOIExtractedProblem
         negative_columns::UnitRange{Int},
         block_columns::Vector{UnitRange{Int}},
         block_sources::Vector{Any},
-        row_sources::Vector{Tuple{Any,Int}},
+        row_sources::Vector{Tuple{Any, Int}},
     )
-        dimension(cone) == num_variables(problem) ||
-            throw(
-                InvalidProblemError(
-                    "cone dimension $(dimension(cone)) does not match " *
-                    "$(num_variables(problem)) flat coordinates",
-                ),
-            )
+        dimension(cone) == num_variables(problem) || throw(
+            InvalidProblemError(
+                "cone dimension $(dimension(cone)) does not match " *
+                "$(num_variables(problem)) flat coordinates",
+            ),
+        )
         length(block_columns) == length(cone.blocks) ||
             throw(InvalidProblemError("one column range is required per cone block"))
         length(block_sources) == length(cone.blocks) ||
@@ -91,7 +87,7 @@ function Base.getproperty(extracted::MOIExtractedProblem, name::Symbol)
     return getfield(extracted, name)
 end
 
-function Base.propertynames(::MOIExtractedProblem, private::Bool=false)
+function Base.propertynames(::MOIExtractedProblem, private::Bool = false)
     public = (
         :problem,
         :A,
@@ -120,8 +116,7 @@ Cone-block and MOI-origin metadata remain available on `extracted`.
 """
 equivalent(extracted::MOIExtractedProblem) = extracted.problem
 
-num_constraints(extracted::MOIExtractedProblem) =
-    num_constraints(extracted.problem)
+num_constraints(extracted::MOIExtractedProblem) = num_constraints(extracted.problem)
 num_variables(extracted::MOIExtractedProblem) = num_variables(extracted.problem)
 
 """
@@ -131,17 +126,13 @@ Recover original MOI-variable values from a flat cone-coordinate vector `x`.
 This only applies the exact free-variable split; it does not check `A*x == b`
 or cone membership.
 """
-function recover_moi_variables(
-    extracted::MOIExtractedProblem,
-    x::AbstractVector,
-)
-    length(x) == num_variables(extracted.problem) ||
-        throw(
-            DimensionMismatch(
-                "expected $(num_variables(extracted.problem)) cone coordinates, " *
-                "got $(length(x))",
-            ),
-        )
+function recover_moi_variables(extracted::MOIExtractedProblem, x::AbstractVector)
+    length(x) == num_variables(extracted.problem) || throw(
+        DimensionMismatch(
+            "expected $(num_variables(extracted.problem)) cone coordinates, " *
+            "got $(length(x))",
+        ),
+    )
     return x[extracted.positive_columns] - x[extracted.negative_columns]
 end
 
@@ -163,11 +154,9 @@ function _constraint_rank(F::Type, S::Type)
         return 4
     elseif F === MOI.VectorOfVariables && S <: MOI.Nonnegatives
         return 5
-    elseif F <: MOI.VectorAffineFunction &&
-           S <: MOI.PositiveSemidefiniteConeTriangle
+    elseif F <: MOI.VectorAffineFunction && S <: MOI.PositiveSemidefiniteConeTriangle
         return 6
-    elseif F === MOI.VectorOfVariables &&
-           S <: MOI.PositiveSemidefiniteConeTriangle
+    elseif F === MOI.VectorOfVariables && S <: MOI.PositiveSemidefiniteConeTriangle
         return 7
     end
     return 0
@@ -180,7 +169,7 @@ function _collect_constraints(model::MOI.ModelLike)
     types_present = MOI.get(model, MOI.ListOfConstraintTypesPresent())
     ordered_types = sort(
         collect(types_present);
-        by=pair -> begin
+        by = pair -> begin
             F, S = pair
             rank = _constraint_rank(F, S)
             return (rank == 0 ? typemax(Int) : rank, string(F), string(S))
@@ -188,18 +177,17 @@ function _collect_constraints(model::MOI.ModelLike)
     )
     for (F, S) in ordered_types
         rank = _constraint_rank(F, S)
-        rank != 0 ||
-            throw(
-                InvalidProblemError(
-                    "unsupported MOI constraint type $F-in-$S; supported forms are " *
-                    "ScalarAffineFunction-in-EqualTo and VectorAffineFunction or " *
-                    "VectorOfVariables in Zeros, Nonnegatives, or " *
-                    "PositiveSemidefiniteConeTriangle",
-                ),
-            )
+        rank != 0 || throw(
+            InvalidProblemError(
+                "unsupported MOI constraint type $F-in-$S; supported forms are " *
+                "ScalarAffineFunction-in-EqualTo and VectorAffineFunction or " *
+                "VectorOfVariables in Zeros, Nonnegatives, or " *
+                "PositiveSemidefiniteConeTriangle",
+            ),
+        )
         indices = sort(
-            collect(MOI.get(model, MOI.ListOfConstraintIndices{F,S}()));
-            by=_constraint_index_value,
+            collect(MOI.get(model, MOI.ListOfConstraintIndices{F, S}()));
+            by = _constraint_index_value,
         )
         for index in indices
             func = MOI.get(model, MOI.ConstraintFunction(), index)
@@ -218,22 +206,20 @@ _function_dimension(func::MOI.VectorOfVariables) = length(func.variables)
 function _validate_constraint_dimension(index, func, set)
     function_dimension = _function_dimension(func)
     set_dimension = set isa MOI.EqualTo ? 1 : MOI.dimension(set)
-    function_dimension == set_dimension ||
-        throw(
-            InvalidProblemError(
-                "constraint $index has function dimension $function_dimension " *
-                "and set dimension $set_dimension",
-            ),
-        )
+    function_dimension == set_dimension || throw(
+        InvalidProblemError(
+            "constraint $index has function dimension $function_dimension " *
+            "and set dimension $set_dimension",
+        ),
+    )
     if func isa MOI.VectorAffineFunction
         for term in func.terms
-            1 <= term.output_index <= function_dimension ||
-                throw(
-                    InvalidProblemError(
-                        "constraint $index has vector-affine output index " *
-                        "$(term.output_index) outside 1:$function_dimension",
-                    ),
-                )
+            1 <= term.output_index <= function_dimension || throw(
+                InvalidProblemError(
+                    "constraint $index has vector-affine output index " *
+                    "$(term.output_index) outside 1:$function_dimension",
+                ),
+            )
         end
     end
     return nothing
@@ -243,22 +229,21 @@ _record_dimension(record::_MOIConstraintRecord) = _function_dimension(record.fun
 _is_conic_record(record::_MOIConstraintRecord) = record.rank >= 4
 
 function _exact_moi(value, policy::AbstractInexactPolicy, context)
-    return exactify(value, policy; context=context)
+    return exactify(value, policy; context = context)
 end
 
 function _variable_position(
-    positions::Dict{MOI.VariableIndex,Int},
+    positions::Dict{MOI.VariableIndex, Int},
     variable::MOI.VariableIndex,
     context,
 )
     position = get(positions, variable, 0)
-    position != 0 ||
-        throw(
-            InvalidProblemError(
-                "$context references variable $variable, which is not in " *
-                "MOI.ListOfVariableIndices",
-            ),
-        )
+    position != 0 || throw(
+        InvalidProblemError(
+            "$context references variable $variable, which is not in " *
+            "MOI.ListOfVariableIndices",
+        ),
+    )
     return position
 end
 
@@ -267,25 +252,17 @@ function _add_original_coefficient!(
     row::Int,
     variable::MOI.VariableIndex,
     coefficient::ExactScalar,
-    positions::Dict{MOI.VariableIndex,Int},
+    positions::Dict{MOI.VariableIndex, Int},
     variable_count::Int,
     context,
 )
     position = _variable_position(positions, variable, context)
     A[row, position] += coefficient
-    A[row, variable_count + position] -= coefficient
+    A[row, variable_count+position] -= coefficient
     return nothing
 end
 
-function _add_scalar_equality!(
-    A,
-    b,
-    row,
-    record,
-    positions,
-    variable_count,
-    policy,
-)
+function _add_scalar_equality!(A, b, row, record, positions, variable_count, policy)
     func = record.func
     context = "constraint $(record.index)"
     for term in func.terms
@@ -310,15 +287,7 @@ function _add_scalar_equality!(
     return nothing
 end
 
-function _add_vector_zero_rows!(
-    A,
-    b,
-    first_row,
-    record,
-    positions,
-    variable_count,
-    policy,
-)
+function _add_vector_zero_rows!(A, b, first_row, record, positions, variable_count, policy)
     context = "constraint $(record.index)"
     func = record.func
     if func isa MOI.VectorAffineFunction
@@ -342,7 +311,7 @@ function _add_vector_zero_rows!(
             )
         end
         for output in eachindex(func.constants)
-            b[first_row + output - 1] =
+            b[first_row+output-1] =
                 -_exact_moi(func.constants[output], policy, "$context constant[$output]")
         end
     else
@@ -375,18 +344,19 @@ function _add_conic_link_rows!(
     func = record.func
     dimension = _record_dimension(record)
     for output in 1:dimension
-        A[first_row + output - 1, first_column + output - 1] = one(ExactScalar)
+        A[first_row+output-1, first_column+output-1] = one(ExactScalar)
     end
     if func isa MOI.VectorAffineFunction
         for term in func.terms
             row = first_row + term.output_index - 1
             scalar_term = term.scalar_term
-            coefficient = -_exact_moi(
-                scalar_term.coefficient,
-                policy,
-                "$context output $(term.output_index) coefficient for " *
-                "$(scalar_term.variable)",
-            )
+            coefficient =
+                -_exact_moi(
+                    scalar_term.coefficient,
+                    policy,
+                    "$context output $(term.output_index) coefficient for " *
+                    "$(scalar_term.variable)",
+                )
             _add_original_coefficient!(
                 A,
                 row,
@@ -398,7 +368,7 @@ function _add_conic_link_rows!(
             )
         end
         for output in eachindex(func.constants)
-            b[first_row + output - 1] =
+            b[first_row+output-1] =
                 _exact_moi(func.constants[output], policy, "$context constant[$output]")
         end
     else
@@ -425,25 +395,18 @@ function _cone_block(set::MOI.PositiveSemidefiniteConeTriangle)
     return PSDTriangleConeBlock(set.side_dimension)
 end
 
-function _extract_objective!(
-    c,
-    model,
-    positions,
-    variable_count,
-    policy,
-)
+function _extract_objective!(c, model, positions, variable_count, policy)
     sense = MOI.get(model, MOI.ObjectiveSense())
     if sense == MOI.FEASIBILITY_SENSE
         return zero(ExactScalar), sense
     end
     objective_type = MOI.get(model, MOI.ObjectiveFunctionType())
-    objective_type <: MOI.ScalarAffineFunction ||
-        throw(
-            InvalidProblemError(
-                "unsupported MOI objective type $objective_type; expected a " *
-                "ScalarAffineFunction",
-            ),
-        )
+    objective_type <: MOI.ScalarAffineFunction || throw(
+        InvalidProblemError(
+            "unsupported MOI objective type $objective_type; expected a " *
+            "ScalarAffineFunction",
+        ),
+    )
     objective = MOI.get(model, MOI.ObjectiveFunction{objective_type}())
     multiplier = if sense == MOI.MIN_SENSE
         one(ExactScalar)
@@ -459,13 +422,11 @@ function _extract_objective!(
                 policy,
                 "objective coefficient for $(term.variable)",
             )
-        position =
-            _variable_position(positions, term.variable, "objective")
+        position = _variable_position(positions, term.variable, "objective")
         c[position] += coefficient
-        c[variable_count + position] -= coefficient
+        c[variable_count+position] -= coefficient
     end
-    constant =
-        multiplier * _exact_moi(objective.constant, policy, "objective constant")
+    constant = multiplier * _exact_moi(objective.constant, policy, "objective constant")
     return constant, sense
 end
 
@@ -476,11 +437,11 @@ Extract the supported part of an `MOI.ModelLike` into exact cone-coordinate
 standard form. The supported constraint families, in deterministic output
 order, are:
 
-1. scalar affine in `EqualTo`;
-2. vector affine, then `VectorOfVariables`, in `Zeros`;
-3. vector affine, then `VectorOfVariables`, in `Nonnegatives`;
-4. vector affine, then `VectorOfVariables`, in
-   `PositiveSemidefiniteConeTriangle`.
+ 1. scalar affine in `EqualTo`;
+ 2. vector affine, then `VectorOfVariables`, in `Zeros`;
+ 3. vector affine, then `VectorOfVariables`, in `Nonnegatives`;
+ 4. vector affine, then `VectorOfVariables`, in
+    `PositiveSemidefiniteConeTriangle`.
 
 Original variables are ordered by increasing MOI index and split into positive
 and negative parts. Nonnegative and PSD constraints receive fresh cone
@@ -498,11 +459,11 @@ records the original sense.
 """
 function extract_moi(
     model::MOI.ModelLike;
-    policy::AbstractInexactPolicy=DEFAULT_INEXACT_POLICY,
+    policy::AbstractInexactPolicy = DEFAULT_INEXACT_POLICY,
 )
     variables = sort(
         collect(MOI.get(model, MOI.ListOfVariableIndices()));
-        by=variable -> variable.value,
+        by = variable -> variable.value,
     )
     length(unique(variables)) == length(variables) ||
         throw(InvalidProblemError("MOI.ListOfVariableIndices contains duplicates"))
@@ -512,11 +473,11 @@ function extract_moi(
 
     equality_rows = sum(
         _record_dimension(record) for record in records if !_is_conic_record(record);
-        init=0,
+        init = 0,
     )
     conic_rows = sum(
         _record_dimension(record) for record in records if _is_conic_record(record);
-        init=0,
+        init = 0,
     )
     conic_columns = conic_rows
     row_count = equality_rows + conic_rows
@@ -527,7 +488,7 @@ function extract_moi(
     c = zeros(ExactScalar, column_count)
 
     positive_columns = 1:variable_count
-    negative_columns = (variable_count + 1):(2 * variable_count)
+    negative_columns = (variable_count+1):(2*variable_count)
     blocks = AbstractConeBlock[]
     block_columns = UnitRange{Int}[]
     block_sources = Any[]
@@ -540,33 +501,17 @@ function extract_moi(
         push!(block_sources, :moi_variable_negative_parts)
     end
 
-    row_sources = Tuple{Any,Int}[]
+    row_sources = Tuple{Any, Int}[]
     row = 1
     column = 2 * variable_count + 1
     for record in records
         record_dimension = _record_dimension(record)
         if record.rank == 1
-            _add_scalar_equality!(
-                A,
-                b,
-                row,
-                record,
-                positions,
-                variable_count,
-                policy,
-            )
+            _add_scalar_equality!(A, b, row, record, positions, variable_count, policy)
         elseif record.rank <= 3
-            _add_vector_zero_rows!(
-                A,
-                b,
-                row,
-                record,
-                positions,
-                variable_count,
-                policy,
-            )
+            _add_vector_zero_rows!(A, b, row, record, positions, variable_count, policy)
         else
-            range = column:(column + record_dimension - 1)
+            range = column:(column+record_dimension-1)
             push!(blocks, _cone_block(record.set))
             push!(block_columns, range)
             push!(block_sources, record.index)
@@ -587,8 +532,7 @@ function extract_moi(
         end
         row += record_dimension
     end
-    row == row_count + 1 ||
-        throw(InvalidProblemError("internal MOI row-count mismatch"))
+    row == row_count + 1 || throw(InvalidProblemError("internal MOI row-count mismatch"))
     column == column_count + 1 ||
         throw(InvalidProblemError("internal MOI column-count mismatch"))
 
@@ -599,9 +543,9 @@ function extract_moi(
         A,
         b,
         cone;
-        c=c,
-        policy=policy,
-        metadata=Dict(
+        c = c,
+        policy = policy,
+        metadata = Dict(
             :source => :MathOptInterface,
             :objective_constant => objective_constant,
             :objective_sense => objective_sense,
@@ -622,10 +566,14 @@ function extract_moi(
 end
 
 extract_moi(model::MOI.ModelLike, policy::AbstractInexactPolicy) =
-    extract_moi(model; policy=policy)
+    extract_moi(model; policy = policy)
 
-"""Compatibility alias for [`extract_moi`](@ref)."""
+"""
+Compatibility alias for [`extract_moi`](@ref).
+"""
 extract_moi_problem(args...; kwargs...) = extract_moi(args...; kwargs...)
 
-"""Construct an extracted problem directly from an MOI model."""
+"""
+Construct an extracted problem directly from an MOI model.
+"""
 MOIExtractedProblem(model::MOI.ModelLike; kwargs...) = extract_moi(model; kwargs...)

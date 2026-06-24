@@ -9,10 +9,7 @@ x = MOI.add_variables(model, 2)
 MOI.add_constraint(model, MOI.VectorOfVariables(x), MOI.Nonnegatives(2))
 MOI.add_constraint(
     model,
-    MOI.ScalarAffineFunction(
-        MOI.ScalarAffineTerm.(Q[1, 1], x),
-        Q(0),
-    ),
+    MOI.ScalarAffineFunction(MOI.ScalarAffineTerm.(Q[1, 1], x), Q(0)),
     MOI.EqualTo(Q(1)),
 )
 

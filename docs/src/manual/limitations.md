@@ -11,6 +11,11 @@ RSDP v0.1 is intentionally narrow.
 - Weighted SOS models can be validated after MOI bridging, but a readable polynomial
   identity requires metadata that may not be available from stable public APIs.
 - Numerical solvers are replaceable hint generators and are never proof authorities.
+- `HypatiaOracle` supports zero, nonnegative, PSD-triangle, and nested product
+  cone blocks.
+- General SOS bridge metadata extraction is not implemented. The ordinary SOS
+  tutorial reconstructs a public exact Gram formulation without using private
+  SumOfSquares internals.
 
 When a feature is unsupported, RSDP should return a precise failure instead of silently
 changing the model or weakening the claim.

@@ -21,7 +21,7 @@ struct PSDCheckDiagnostic
     code::Symbol
     message::String
     step::Int
-    index::Union{Nothing,Int}
+    index::Union{Nothing, Int}
 end
 
 """
@@ -30,13 +30,14 @@ end
 Structured result of an exact positive-semidefinite check.
 
 Fields:
-- `is_psd`: whether the input is exactly symmetric positive semidefinite;
-- `rank`: exact rank accumulated before the outcome was established;
-- `diagnostic`: machine-readable status or failure information;
-- `permutation`: pivot order, followed by uneliminated input indices;
-- `pivots`: exact positive pivots, followed by zero pivots on success;
-- `witness`: an exact vector `x` with `x' * A * x < 0` for algebraic
-  indefiniteness, when available.
+
+  - `is_psd`: whether the input is exactly symmetric positive semidefinite;
+  - `rank`: exact rank accumulated before the outcome was established;
+  - `diagnostic`: machine-readable status or failure information;
+  - `permutation`: pivot order, followed by uneliminated input indices;
+  - `pivots`: exact positive pivots, followed by zero pivots on success;
+  - `witness`: an exact vector `x` with `x' * A * x < 0` for algebraic
+    indefiniteness, when available.
 """
 struct PSDCheckResult
     is_psd::Bool
@@ -44,7 +45,7 @@ struct PSDCheckResult
     diagnostic::PSDCheckDiagnostic
     permutation::Vector{Int}
     pivots::Vector{ExactRational}
-    witness::Union{Nothing,Vector{ExactRational}}
+    witness::Union{Nothing, Vector{ExactRational}}
 end
 
 function Base.show(io::IO, result::PSDCheckResult)
@@ -62,7 +63,7 @@ end
 
 _psd_exact_rational(value::ExactRational) = value
 _psd_exact_rational(value::Integer) = BigInt(value) // BigInt(1)
-_psd_exact_rational(value::Rational{T}) where {T<:Integer} =
+_psd_exact_rational(value::Rational{T}) where {T <: Integer} =
     BigInt(numerator(value)) // BigInt(denominator(value))
 _psd_exact_rational(value) = nothing
 
@@ -85,10 +86,10 @@ function _psd_result(
     code::Symbol,
     message::String,
     step::Int,
-    index::Union{Nothing,Int},
+    index::Union{Nothing, Int},
     permutation::Vector{Int},
     pivots::Vector{ExactRational},
-    witness::Union{Nothing,Vector{ExactRational}}=nothing,
+    witness::Union{Nothing, Vector{ExactRational}} = nothing,
 )
     diagnostic = PSDCheckDiagnostic(code, message, step, index)
     return PSDCheckResult(is_psd, rank, diagnostic, permutation, pivots, witness)
@@ -140,7 +141,7 @@ function check_psd(matrix::AbstractMatrix)
     end
 
     for column in 1:columns
-        for row in 1:(column - 1)
+        for row in 1:(column-1)
             if exact[row, column] != exact[column, row]
                 return _psd_result(
                     false,
@@ -192,7 +193,7 @@ function check_psd(matrix::AbstractMatrix)
         if positive_index === nothing
             off_diagonal = nothing
             for column in 2:remainder_size
-                for row in 1:(column - 1)
+                for row in 1:(column-1)
                     if !iszero(remainder[row, column])
                         off_diagonal = (row, column)
                         break
@@ -226,9 +227,8 @@ function check_psd(matrix::AbstractMatrix)
                 true,
                 rank,
                 rank == n ? :positive_definite : :positive_semidefinite,
-                rank == n ?
-                    "all exact pivots are positive" :
-                    "the exact Schur remainder is zero",
+                rank == n ? "all exact pivots are positive" :
+                "the exact Schur remainder is zero",
                 rank,
                 nothing,
                 pivot_order,
@@ -269,7 +269,9 @@ function check_psd(matrix::AbstractMatrix)
     )
 end
 
-"""Alias for [`check_psd`](@ref)."""
+"""
+Alias for [`check_psd`](@ref).
+"""
 exact_psd_check(matrix::AbstractMatrix) = check_psd(matrix)
 
 """
@@ -279,11 +281,17 @@ Return only the Boolean outcome of [`check_psd`](@ref).
 """
 is_positive_semidefinite_exact(matrix::AbstractMatrix) = check_psd(matrix).is_psd
 
-"""Short Boolean alias for [`is_positive_semidefinite_exact`](@ref)."""
+"""
+Short Boolean alias for [`is_positive_semidefinite_exact`](@ref).
+"""
 is_psd_exact(matrix::AbstractMatrix) = is_positive_semidefinite_exact(matrix)
 
-"""Compatibility alias for [`check_psd`](@ref)."""
+"""
+Compatibility alias for [`check_psd`](@ref).
+"""
 check_psd_exact(matrix::AbstractMatrix) = check_psd(matrix)
 
-"""Conventional Boolean alias for [`is_positive_semidefinite_exact`](@ref)."""
+"""
+Conventional Boolean alias for [`is_positive_semidefinite_exact`](@ref).
+"""
 is_psd(matrix::AbstractMatrix) = is_positive_semidefinite_exact(matrix)

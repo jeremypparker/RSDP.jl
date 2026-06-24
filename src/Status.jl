@@ -17,13 +17,19 @@ self-documenting.
 """
 const ExactAffineStatus = SolveStatus
 
-"""Return `true` when `status` is `FEASIBLE`."""
+"""
+Return `true` when `status` is `FEASIBLE`.
+"""
 is_feasible(status::SolveStatus) = status == FEASIBLE
 
-"""Return `true` when `status` is `INFEASIBLE`."""
+"""
+Return `true` when `status` is `INFEASIBLE`.
+"""
 is_infeasible(status::SolveStatus) = status == INFEASIBLE
 
-"""Return `true` when `status` is `UNKNOWN`."""
+"""
+Return `true` when `status` is `UNKNOWN`.
+"""
 is_unknown(status::SolveStatus) = status == UNKNOWN
 
 """

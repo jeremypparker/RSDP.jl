@@ -11,14 +11,8 @@ import MathOptInterface as MOI
         model,
         MOI.VectorAffineFunction{Q}(
             [
-                MOI.VectorAffineTerm(
-                    1,
-                    MOI.ScalarAffineTerm(Q(1), diagonal_1),
-                ),
-                MOI.VectorAffineTerm(
-                    2,
-                    MOI.ScalarAffineTerm(Q(1), diagonal_2),
-                ),
+                MOI.VectorAffineTerm(1, MOI.ScalarAffineTerm(Q(1), diagonal_1)),
+                MOI.VectorAffineTerm(2, MOI.ScalarAffineTerm(Q(1), diagonal_2)),
             ],
             Q[-1, -1],
         ),
@@ -33,10 +27,7 @@ import MathOptInterface as MOI
     MOI.set(
         model,
         MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Q}}(),
-        MOI.ScalarAffineFunction(
-            [MOI.ScalarAffineTerm(Q(1), off_diagonal)],
-            Q(0),
-        ),
+        MOI.ScalarAffineFunction([MOI.ScalarAffineTerm(Q(1), off_diagonal)], Q(0)),
     )
 
     extracted = RSDP.extract_moi(model)

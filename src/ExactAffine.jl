@@ -9,9 +9,9 @@ nullspace basis.
 function solve_affine(
     A::AbstractMatrix,
     b::AbstractVector;
-    policy::AbstractInexactPolicy=DEFAULT_INEXACT_POLICY,
+    policy::AbstractInexactPolicy = DEFAULT_INEXACT_POLICY,
 )
-    data = exact_linear_solve(A, b; policy=policy)
+    data = exact_linear_solve(A, b; policy = policy)
     diagnostics = AffineDiagnostics(
         size(A, 1),
         size(A, 2),
@@ -34,18 +34,19 @@ function solve_affine(
     return ExactAffineResult(FEASIBLE, solution, diagnostics)
 end
 
-solve_affine(
-    A::AbstractMatrix,
-    b::AbstractVector,
-    policy::AbstractInexactPolicy,
-) = solve_affine(A, b; policy=policy)
+solve_affine(A::AbstractMatrix, b::AbstractVector, policy::AbstractInexactPolicy) =
+    solve_affine(A, b; policy = policy)
 
 solve_affine(problem::ExactConicProblem) = solve_affine(problem.A, problem.b)
 
-"""Alias for [`solve_affine`](@ref)."""
+"""
+Alias for [`solve_affine`](@ref).
+"""
 exact_solve(args...; kwargs...) = solve_affine(args...; kwargs...)
 
-"""Alias for [`solve_affine`](@ref)."""
+"""
+Alias for [`solve_affine`](@ref).
+"""
 solve_exact(args...; kwargs...) = solve_affine(args...; kwargs...)
 
 """
@@ -59,9 +60,9 @@ Unlike [`solve_affine`](@ref), this convenience API throws
 function exact_affine_space(
     A::AbstractMatrix,
     b::AbstractVector;
-    policy::AbstractInexactPolicy=DEFAULT_INEXACT_POLICY,
+    policy::AbstractInexactPolicy = DEFAULT_INEXACT_POLICY,
 )
-    result = solve_affine(A, b; policy=policy)
+    result = solve_affine(A, b; policy = policy)
     if is_infeasible(result)
         throw(
             InconsistentAffineSystemError(
@@ -73,14 +74,10 @@ function exact_affine_space(
     return something(result.solution)
 end
 
-exact_affine_space(
-    A::AbstractMatrix,
-    b::AbstractVector,
-    policy::AbstractInexactPolicy,
-) = exact_affine_space(A, b; policy=policy)
+exact_affine_space(A::AbstractMatrix, b::AbstractVector, policy::AbstractInexactPolicy) =
+    exact_affine_space(A, b; policy = policy)
 
-exact_affine_space(problem::ExactConicProblem) =
-    exact_affine_space(problem.A, problem.b)
+exact_affine_space(problem::ExactConicProblem) = exact_affine_space(problem.A, problem.b)
 
 """
     satisfies_affine_constraints(A, b, x; policy=ErrorOnInexact())
@@ -91,31 +88,26 @@ function satisfies_affine_constraints(
     A::AbstractMatrix,
     b::AbstractVector,
     x::AbstractVector;
-    policy::AbstractInexactPolicy=DEFAULT_INEXACT_POLICY,
+    policy::AbstractInexactPolicy = DEFAULT_INEXACT_POLICY,
 )
-    size(A, 2) == length(x) ||
-        throw(
-            DimensionMismatch(
-                "A has $(size(A, 2)) columns but x has length $(length(x))",
-            ),
-        )
+    size(A, 2) == length(x) || throw(
+        DimensionMismatch("A has $(size(A, 2)) columns but x has length $(length(x))"),
+    )
     size(A, 1) == length(b) ||
-        throw(
-            DimensionMismatch(
-                "A has $(size(A, 1)) rows but b has length $(length(b))",
-            ),
-        )
-    exact_A = exactify(A, policy; context="A")
-    exact_b = vec(exactify(b, policy; context="b"))
-    exact_x = vec(exactify(x, policy; context="x"))
+        throw(DimensionMismatch("A has $(size(A, 1)) rows but b has length $(length(b))"))
+    exact_A = exactify(A, policy; context = "A")
+    exact_b = vec(exactify(b, policy; context = "b"))
+    exact_x = vec(exactify(x, policy; context = "x"))
     return exact_A * exact_x == exact_b
 end
 
 satisfies_affine_constraints(
     problem::ExactConicProblem,
     x::AbstractVector;
-    policy::AbstractInexactPolicy=DEFAULT_INEXACT_POLICY,
-) = satisfies_affine_constraints(problem.A, problem.b, x; policy=policy)
+    policy::AbstractInexactPolicy = DEFAULT_INEXACT_POLICY,
+) = satisfies_affine_constraints(problem.A, problem.b, x; policy = policy)
 
-"""Alias for [`satisfies_affine_constraints`](@ref)."""
+"""
+Alias for [`satisfies_affine_constraints`](@ref).
+"""
 check_affine(args...; kwargs...) = satisfies_affine_constraints(args...; kwargs...)

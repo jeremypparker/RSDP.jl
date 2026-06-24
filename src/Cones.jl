@@ -85,10 +85,10 @@ end
 
 The Cartesian product of zero or more cone blocks.
 """
-struct ProductConeBlock{B<:Tuple} <: AbstractConeBlock
+struct ProductConeBlock{B <: Tuple} <: AbstractConeBlock
     blocks::B
 
-    function ProductConeBlock(blocks::B) where {B<:Tuple}
+    function ProductConeBlock(blocks::B) where {B <: Tuple}
         all(block -> block isa AbstractConeBlock, blocks) ||
             throw(ArgumentError("every product component must be an AbstractConeBlock"))
         return new{B}(blocks)
@@ -136,7 +136,7 @@ end
 
 Return the packed ambient dimension of a cone block.
 """
-dimension(block::Union{ZeroConeBlock,NonnegativeConeBlock}) = block.dimension
+dimension(block::Union{ZeroConeBlock, NonnegativeConeBlock}) = block.dimension
 dimension(block::PSDTriangleConeBlock) = triangle_dimension(block.side_dimension)
 
 function dimension(block::ProductConeBlock)
@@ -152,23 +152,29 @@ function dimension(block::ProductConeBlock)
     return total
 end
 
-"""Alias for [`dimension`](@ref)."""
+"""
+Alias for [`dimension`](@ref).
+"""
 ambient_dimension(block::AbstractConeBlock) = dimension(block)
 
-"""Return the matrix side dimension of a PSD triangle block."""
+"""
+Return the matrix side dimension of a PSD triangle block.
+"""
 matrix_dimension(block::PSDTriangleConeBlock) = block.side_dimension
 
 Base.length(block::AbstractConeBlock) = dimension(block)
 
 _exact_rational(value::ExactRational) = value
 _exact_rational(value::Integer) = BigInt(value) // BigInt(1)
-_exact_rational(value::Rational{T}) where {T<:Integer} =
+_exact_rational(value::Rational{T}) where {T <: Integer} =
     BigInt(numerator(value)) // BigInt(denominator(value))
 
 function _exact_rational(value)
-    throw(ArgumentError(
-        "expected an integer or rational value for an exact check, got $(typeof(value))",
-    ))
+    throw(
+        ArgumentError(
+            "expected an integer or rational value for an exact check, got $(typeof(value))",
+        ),
+    )
 end
 
 """
@@ -182,10 +188,12 @@ to `Rational{BigInt}`; inexact entries are rejected.
 function triangle_to_matrix(values::AbstractVector, side_dimension::Integer)
     n = _checked_dimension(side_dimension, "triangle side dimension")
     expected = triangle_dimension(n)
-    length(values) == expected || throw(DimensionMismatch(
-        "packed triangle has length $(length(values)); expected $expected " *
-        "for side dimension $n",
-    ))
+    length(values) == expected || throw(
+        DimensionMismatch(
+            "packed triangle has length $(length(values)); expected $expected " *
+            "for side dimension $n",
+        ),
+    )
 
     matrix = Matrix{ExactRational}(undef, n, n)
     packed_index = 1
@@ -214,9 +222,8 @@ rejected.
 """
 function matrix_to_triangle(matrix::AbstractMatrix)
     rows, columns = size(matrix)
-    rows == columns || throw(DimensionMismatch(
-        "cannot pack a nonsquare $(rows) × $(columns) matrix",
-    ))
+    rows == columns ||
+        throw(DimensionMismatch("cannot pack a nonsquare $(rows) × $(columns) matrix"))
 
     result = Vector{ExactRational}(undef, triangle_dimension(rows))
     packed_index = 1
@@ -224,9 +231,11 @@ function matrix_to_triangle(matrix::AbstractMatrix)
         for row in 1:column
             upper = _exact_rational(matrix[row, column])
             lower = _exact_rational(matrix[column, row])
-            upper == lower || throw(ArgumentError(
-                "matrix is not symmetric at indices ($row, $column) and ($column, $row)",
-            ))
+            upper == lower || throw(
+                ArgumentError(
+                    "matrix is not symmetric at indices ($row, $column) and ($column, $row)",
+                ),
+            )
             result[packed_index] = upper
             packed_index += 1
         end
@@ -234,5 +243,7 @@ function matrix_to_triangle(matrix::AbstractMatrix)
     return result
 end
 
-"""Alias for [`triangle_to_matrix`](@ref)."""
+"""
+Alias for [`triangle_to_matrix`](@ref).
+"""
 reconstruct_triangle(args...) = triangle_to_matrix(args...)

@@ -17,7 +17,7 @@ quadratic_form(matrix, vector) = transpose(vector) * matrix * vector
     @test result.is_psd
     @test result.rank == 2
     @test result.diagnostic.code == :positive_definite
-    @test result.pivots == Rational{BigInt}[2, 3 // 2]
+    @test result.pivots == Rational{BigInt}[2, 3//2]
     @test result.witness === nothing
 
     singular = [1 1 0; 1 1 0; 0 0 0]

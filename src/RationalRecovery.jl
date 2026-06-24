@@ -1,8 +1,5 @@
 export NumericalPrimalHint,
-    RecoveryOptions,
-    RecoveryDiagnostics,
-    RationalRecoveryError,
-    recover_primal_certificate
+    RecoveryOptions, RecoveryDiagnostics, RationalRecoveryError, recover_primal_certificate
 
 """
     NumericalPrimalHint(x; objective=nothing)
@@ -10,7 +7,7 @@ export NumericalPrimalHint,
 Floating-point primal information supplied to rational recovery. `objective` is
 optional; when present, it is checked against the recovered exact objective.
 """
-struct NumericalPrimalHint{T<:Real,O}
+struct NumericalPrimalHint{T <: Real, O}
     x::Vector{T}
     objective::O
 end
@@ -29,17 +26,15 @@ function Base.propertynames(::NumericalPrimalHint, private::Bool = false)
     return names
 end
 
-function NumericalPrimalHint(x::AbstractVector{T}; objective = nothing) where {T<:Real}
-    isempty(x) && return NumericalPrimalHint{T,typeof(objective)}(T[], objective)
+function NumericalPrimalHint(x::AbstractVector{T}; objective = nothing) where {T <: Real}
+    isempty(x) && return NumericalPrimalHint{T, typeof(objective)}(T[], objective)
     all(isfinite, x) ||
         throw(ArgumentError("numerical primal hint must contain only finite values"))
     if !isnothing(objective)
-        objective isa Real ||
-            throw(ArgumentError("objective hint must be real or nothing"))
-        isfinite(objective) ||
-            throw(ArgumentError("objective hint must be finite"))
+        objective isa Real || throw(ArgumentError("objective hint must be real or nothing"))
+        isfinite(objective) || throw(ArgumentError("objective hint must be finite"))
     end
-    return NumericalPrimalHint{T,typeof(objective)}(collect(x), objective)
+    return NumericalPrimalHint{T, typeof(objective)}(collect(x), objective)
 end
 
 NumericalPrimalHint(x::AbstractVector, objective) =
@@ -68,8 +63,7 @@ function RecoveryOptions(;
     objective_atol::Real = atol,
     objective_rtol::Real = rtol,
 )
-    max_denominator > 0 ||
-        throw(ArgumentError("max_denominator must be positive"))
+    max_denominator > 0 || throw(ArgumentError("max_denominator must be positive"))
     for (name, value) in (
         (:atol, atol),
         (:rtol, rtol),
@@ -106,7 +100,7 @@ struct RecoveryDiagnostics
     affine_dimension::Int
     max_coordinate_error::BigFloat
     max_primal_error::BigFloat
-    certificate_report::Union{Nothing,CertificateCheckReport}
+    certificate_report::Union{Nothing, CertificateCheckReport}
 end
 
 """
@@ -121,13 +115,7 @@ end
 
 function Base.showerror(io::IO, error::RationalRecoveryError)
     diagnostics = error.diagnostics
-    print(
-        io,
-        "rational recovery failed at ",
-        diagnostics.stage,
-        ": ",
-        diagnostics.message,
-    )
+    print(io, "rational recovery failed at ", diagnostics.stage, ": ", diagnostics.message)
     if isfinite(diagnostics.max_coordinate_error)
         print(io, " (max affine-coordinate error ", diagnostics.max_coordinate_error, ")")
     end
@@ -155,7 +143,7 @@ throw [`RationalRecoveryError`](@ref) with boundary-specific diagnostics.
 function recover_primal_certificate(
     problem,
     hint::NumericalPrimalHint;
-    options::Union{Nothing,RecoveryOptions} = nothing,
+    options::Union{Nothing, RecoveryOptions} = nothing,
     max_denominator::Integer = 1_000_000,
     atol::Real = 1e-8,
     rtol::Real = 1e-8,
@@ -163,13 +151,15 @@ function recover_primal_certificate(
     objective_rtol::Real = rtol,
     return_diagnostics::Bool = false,
 )
-    effective_options = isnothing(options) ? RecoveryOptions(;
-        max_denominator = max_denominator,
-        atol = atol,
-        rtol = rtol,
-        objective_atol = objective_atol,
-        objective_rtol = objective_rtol,
-    ) : options
+    effective_options =
+        isnothing(options) ?
+        RecoveryOptions(;
+            max_denominator = max_denominator,
+            atol = atol,
+            rtol = rtol,
+            objective_atol = objective_atol,
+            objective_rtol = objective_rtol,
+        ) : options
     return recover_primal_certificate(
         problem,
         hint,
@@ -204,18 +194,16 @@ function recover_primal_certificate(
         _recovery_fail(:affine_space, sprint(showerror, error))
     end
 
-    length(hint.x) == length(xp) ||
-        _recovery_fail(
-            :input,
-            "hint has $(length(hint.x)) entries but affine space has $(length(xp))",
-            size(N, 2),
-        )
-    size(N, 1) == length(xp) ||
-        _recovery_fail(
-            :affine_space,
-            "nullspace basis has $(size(N, 1)) rows but xₚ has $(length(xp)) entries",
-            size(N, 2),
-        )
+    length(hint.x) == length(xp) || _recovery_fail(
+        :input,
+        "hint has $(length(hint.x)) entries but affine space has $(length(xp))",
+        size(N, 2),
+    )
+    size(N, 1) == length(xp) || _recovery_fail(
+        :affine_space,
+        "nullspace basis has $(size(N, 1)) rows but xₚ has $(length(xp)) entries",
+        size(N, 2),
+    )
 
     z_approx = try
         _recovery_affine_coordinates(hint.x, xp, N)
@@ -247,14 +235,13 @@ function recover_primal_certificate(
     x_exact = _recovery_reconstruct(xp, N, z_exact)
     max_primal_error, primal_scale = _recovery_primal_error(hint.x, x_exact)
     primal_tolerance = options.atol + options.rtol * primal_scale
-    max_primal_error <= primal_tolerance ||
-        _recovery_fail(
-            :proximity,
-            "nearest bounded-denominator affine point exceeds tolerance $primal_tolerance",
-            length(z_exact),
-            max_coordinate_error,
-            max_primal_error,
-        )
+    max_primal_error <= primal_tolerance || _recovery_fail(
+        :proximity,
+        "nearest bounded-denominator affine point exceeds tolerance $primal_tolerance",
+        length(z_exact),
+        max_coordinate_error,
+        max_primal_error,
+    )
 
     certificate = make_primal_certificate(problem, x_exact)
 
@@ -268,8 +255,7 @@ function recover_primal_certificate(
                 max_primal_error,
             )
         end
-        objective_error =
-            abs(BigFloat(certificate.objective) - BigFloat(hint.objective))
+        objective_error = abs(BigFloat(certificate.objective) - BigFloat(hint.objective))
         objective_scale = max(
             BigFloat(1),
             abs(BigFloat(certificate.objective)),
@@ -277,29 +263,26 @@ function recover_primal_certificate(
         )
         objective_tolerance =
             options.objective_atol + options.objective_rtol * objective_scale
-        objective_error <= objective_tolerance ||
-            _recovery_fail(
-                :objective,
-                "exact objective differs from hint by $objective_error " *
-                "(tolerance $objective_tolerance)",
-                length(z_exact),
-                max_coordinate_error,
-                max_primal_error,
-            )
-    end
-
-    report = check_certificate(problem, certificate; diagnostics = true)
-    report.valid ||
-        _recovery_fail(
-            :certificate,
-            isempty(report.diagnostics) ?
-            "independent certificate check failed" :
-            join(report.diagnostics, "; "),
+        objective_error <= objective_tolerance || _recovery_fail(
+            :objective,
+            "exact objective differs from hint by $objective_error " *
+            "(tolerance $objective_tolerance)",
             length(z_exact),
             max_coordinate_error,
             max_primal_error,
-            report,
         )
+    end
+
+    report = check_certificate(problem, certificate; diagnostics = true)
+    report.valid || _recovery_fail(
+        :certificate,
+        isempty(report.diagnostics) ? "independent certificate check failed" :
+        join(report.diagnostics, "; "),
+        length(z_exact),
+        max_coordinate_error,
+        max_primal_error,
+        report,
+    )
 
     diagnostics = RecoveryDiagnostics(
         :success,
@@ -310,8 +293,7 @@ function recover_primal_certificate(
         max_primal_error,
         report,
     )
-    return return_diagnostics ?
-           (certificate = certificate, diagnostics = diagnostics) :
+    return return_diagnostics ? (certificate = certificate, diagnostics = diagnostics) :
            certificate
 end
 
@@ -333,11 +315,7 @@ function _recovery_exact_affine_space(problem)
     if hasproperty(space, :solution)
         solution = getproperty(space, :solution)
         isnothing(solution) &&
-            throw(
-                ArgumentError(
-                    "the problem's affine equations are not feasible",
-                ),
-            )
+            throw(ArgumentError("the problem's affine equations are not feasible"))
         space = solution
     end
 
@@ -399,7 +377,7 @@ function _recovery_affine_coordinates(hint, xp, N)
             end
         end
     end
-    for left in 1:columns, right in 1:(left - 1)
+    for left in 1:columns, right in 1:(left-1)
         gram[left, right] = gram[right, left]
     end
     return _recovery_solve_dense(gram, rhs)
@@ -407,14 +385,13 @@ end
 
 function _recovery_solve_dense(matrix::Matrix{BigFloat}, rhs::Vector{BigFloat})
     n = length(rhs)
-    size(matrix) == (n, n) ||
-        throw(DimensionMismatch("linear system must be square"))
+    size(matrix) == (n, n) || throw(DimensionMismatch("linear system must be square"))
     augmented = hcat(copy(matrix), copy(rhs))
 
     for pivot_column in 1:n
         pivot_row = pivot_column
         pivot_size = abs(augmented[pivot_row, pivot_column])
-        for row in (pivot_column + 1):n
+        for row in (pivot_column+1):n
             candidate_size = abs(augmented[row, pivot_column])
             if candidate_size > pivot_size
                 pivot_row = row
@@ -424,17 +401,17 @@ function _recovery_solve_dense(matrix::Matrix{BigFloat}, rhs::Vector{BigFloat})
         iszero(pivot_size) &&
             throw(ArgumentError("nullspace basis columns are linearly dependent"))
         if pivot_row != pivot_column
-            for column in pivot_column:(n + 1)
+            for column in pivot_column:(n+1)
                 augmented[pivot_column, column], augmented[pivot_row, column] =
                     augmented[pivot_row, column], augmented[pivot_column, column]
             end
         end
 
         pivot = augmented[pivot_column, pivot_column]
-        for row in (pivot_column + 1):n
+        for row in (pivot_column+1):n
             factor = augmented[row, pivot_column] / pivot
             augmented[row, pivot_column] = 0
-            for column in (pivot_column + 1):(n + 1)
+            for column in (pivot_column+1):(n+1)
                 augmented[row, column] -= factor * augmented[pivot_column, column]
             end
         end
@@ -442,8 +419,8 @@ function _recovery_solve_dense(matrix::Matrix{BigFloat}, rhs::Vector{BigFloat})
 
     solution = zeros(BigFloat, n)
     for row in n:-1:1
-        remainder = augmented[row, n + 1]
-        for column in (row + 1):n
+        remainder = augmented[row, n+1]
+        for column in (row+1):n
             remainder -= augmented[row, column] * solution[column]
         end
         solution[row] = remainder / augmented[row, row]
@@ -466,21 +443,16 @@ function _recovery_limit_denominator(value::Real, max_denominator::BigInt)
         quotient = div(numerator_remaining, denominator_remaining)
         q2 = q0 + quotient * q1
         q2 > max_denominator && break
-        p0, q0, p1, q1 =
-            p1, q1, p0 + quotient * p1, q2
+        p0, q0, p1, q1 = p1, q1, p0 + quotient * p1, q2
         numerator_remaining, denominator_remaining =
-            denominator_remaining,
-            numerator_remaining - quotient * denominator_remaining
+            denominator_remaining, numerator_remaining - quotient * denominator_remaining
     end
 
     multiplier = div(max_denominator - q0, q1)
     bound1 = (p0 + multiplier * p1) // (q0 + multiplier * q1)
     bound2 = p1 // q1
     positive_exact = abs(exact)
-    nearest =
-        abs(bound2 - positive_exact) <= abs(bound1 - positive_exact) ?
-        bound2 :
-        bound1
+    nearest = abs(bound2 - positive_exact) <= abs(bound1 - positive_exact) ? bound2 : bound1
     return sign * nearest
 end
 
@@ -510,7 +482,7 @@ function _recovery_fail(
     affine_dimension::Integer = 0,
     max_coordinate_error::Real = BigFloat(Inf),
     max_primal_error::Real = BigFloat(Inf),
-    report::Union{Nothing,CertificateCheckReport} = nothing,
+    report::Union{Nothing, CertificateCheckReport} = nothing,
 )
     throw(
         RationalRecoveryError(
@@ -529,7 +501,7 @@ end
 
 function _recovery_failure_status(
     stage::Symbol,
-    report::Union{Nothing,CertificateCheckReport},
+    report::Union{Nothing, CertificateCheckReport},
 )
     if stage === :affine_space
         return RECOVERY_FAILED_AFFINE
