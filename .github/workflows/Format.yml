@@ -1,0 +1,23 @@
+name: Format
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: '1.10'
+      - name: Check Julia formatting
+        shell: julia --color=yes {0}
+        run: |
+          using Pkg
+          Pkg.add(name="JuliaFormatter", version="2")
+          using JuliaFormatter
+          format(".", verbose=true)
+          success(`git diff --exit-code`)

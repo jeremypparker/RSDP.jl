@@ -1,0 +1,96 @@
+module RSDP
+
+using LinearAlgebra
+using Logging
+using SHA
+using SparseArrays
+
+include("Status.jl")
+include("Errors.jl")
+include("Diagnostics.jl")
+include("Exactification.jl")
+include("Cones.jl")
+include("Types.jl")
+include("ExactLinearAlgebra.jl")
+include("ExactAffine.jl")
+include("PSD.jl")
+include("ConeChecks.jl")
+include("Certificates.jl")
+include("CertificateCheckers.jl")
+include("RationalRecovery.jl")
+include("MOIExtraction.jl")
+
+export SolveStatus,
+    ExactAffineStatus,
+    ValidationStatus,
+    UNKNOWN,
+    FEASIBLE,
+    INFEASIBLE,
+    NOT_SOLVED,
+    NUMERICAL_SOLVED_NOT_VALIDATED,
+    VALIDATED_PRIMAL_FEASIBLE,
+    VALIDATED_DUAL_FEASIBLE,
+    VALIDATED_DUAL_BOUND,
+    VALIDATED_OPTIMAL,
+    VALIDATED_INFEASIBLE,
+    EXACTIFICATION_REQUIRED,
+    UNSUPPORTED_CONE,
+    UNSUPPORTED_OBJECTIVE,
+    UNSUPPORTED_MODEL,
+    INCONSISTENT_AFFINE_SYSTEM,
+    RECOVERY_FAILED,
+    RECOVERY_FAILED_AFFINE,
+    RECOVERY_FAILED_CONE,
+    RECOVERY_FAILED_DENOMINATOR_LIMIT,
+    RECOVERY_FAILED_WITH_BOUNDARY_DIAGNOSTIC,
+    FACIAL_REDUCTION_REQUIRED,
+    CERTIFIED_FACE_REDUCTION_FAILED,
+    NON_RATIONAL_FACE_SUSPECTED,
+    NUMERICAL_ORACLE_FAILED,
+    CERTIFICATE_CHECK_FAILED,
+    is_feasible,
+    is_infeasible,
+    is_unknown,
+    ExactScalar,
+    AbstractInexactPolicy,
+    InexactPolicy,
+    ErrorOnInexact,
+    RationalizeInexact,
+    DecimalStringInexact,
+    DEFAULT_INEXACT_POLICY,
+    exactify,
+    RSDPError,
+    InexactDataError,
+    InexactConversionError,
+    InvalidProblemError,
+    InconsistentAffineSystemError,
+    AffineDiagnostics,
+    nullity,
+    is_consistent,
+    ExactConicProblem,
+    num_constraints,
+    num_variables,
+    ExactAffineSolution,
+    ExactAffineResult,
+    affine_dimension,
+    affine_point,
+    is_unique,
+    exact_rref,
+    rref_exact,
+    exact_rank,
+    exact_nullspace,
+    nullspace_exact,
+    exact_linear_solve,
+    solve_affine,
+    exact_solve,
+    solve_exact,
+    exact_affine_space,
+    satisfies_affine_constraints,
+    check_affine,
+    problem_hash,
+    objective_value,
+    check_cones,
+    ExactPrimalCertificate,
+    ValidationReport
+
+end

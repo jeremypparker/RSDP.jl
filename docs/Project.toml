@@ -1,0 +1,6 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+RSDP = "c704861e-d7c0-41f3-8238-92bdf2fb2158"
+
+[compat]
+Documenter = "1"
