@@ -76,7 +76,7 @@ jobs:
           Pkg.develop(PackageSpec(path=pwd()))
           Pkg.instantiate()
           using Test
-          result = include("examples/jump_rational_sdp.jl")
+          result = include(joinpath(pwd(), "examples", "jump_rational_sdp.jl"))
           @test result.certificate !== nothing
           @test result.report.ok
       - name: Run SumOfSquares example
@@ -86,7 +86,7 @@ jobs:
           Pkg.develop(PackageSpec(path=pwd()))
           Pkg.instantiate()
           using Test
-          result = include("examples/ordinary_sos.jl")
+          result = include(joinpath(pwd(), "examples", "ordinary_sos.jl"))
           @test result.certificate !== nothing
           @test result.report.ok
       - uses: julia-actions/julia-docdeploy@v1
