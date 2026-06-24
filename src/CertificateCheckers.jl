@@ -16,10 +16,12 @@ struct CertificateCheckReport
     cones_valid::Bool
     objective_valid::Bool
     diagnostics::Vector{String}
-    computed_objective::Union{Nothing,Rational{BigInt}}
+    computed_objective::Union{Nothing, Rational{BigInt}}
 end
 
-"""Compatibility name for the authoritative certificate validation report."""
+"""
+Compatibility name for the authoritative certificate validation report.
+"""
 const ValidationReport = CertificateCheckReport
 
 function Base.getproperty(report::CertificateCheckReport, name::Symbol)
@@ -65,20 +67,18 @@ function check_certificate(
 )
     messages = String[]
     version_valid = certificate.certificate_version == CERTIFICATE_VERSION
-    version_valid ||
-        push!(
-            messages,
-            "unsupported certificate version $(certificate.certificate_version); " *
-            "expected $CERTIFICATE_VERSION",
-        )
+    version_valid || push!(
+        messages,
+        "unsupported certificate version $(certificate.certificate_version); " *
+        "expected $CERTIFICATE_VERSION",
+    )
 
     current_hash = _certificate_problem_hash(problem)
     hash_valid = isequal(current_hash, certificate.problem_hash)
-    hash_valid ||
-        push!(
-            messages,
-            "problem hash mismatch: certificate is for a different or modified problem",
-        )
+    hash_valid || push!(
+        messages,
+        "problem hash mismatch: certificate is for a different or modified problem",
+    )
 
     affine_valid = _certificate_check_affine(problem, certificate.x, messages)
     cones_valid = _certificate_check_cones(problem, certificate.x, messages)
@@ -98,12 +98,11 @@ function check_certificate(
             try
                 computed_objective = _certificate_objective_value(problem, certificate.x)
                 objective_valid = computed_objective == certificate.objective
-                objective_valid ||
-                    push!(
-                        messages,
-                        "objective mismatch: expected $(certificate.objective), " *
-                        "computed $computed_objective",
-                    )
+                objective_valid || push!(
+                    messages,
+                    "objective mismatch: expected $(certificate.objective), " *
+                    "computed $computed_objective",
+                )
             catch error
                 objective_valid = false
                 push!(messages, "objective check failed: $(sprint(showerror, error))")
@@ -111,12 +110,7 @@ function check_certificate(
         end
     end
 
-    valid =
-        version_valid &&
-        hash_valid &&
-        affine_valid &&
-        cones_valid &&
-        objective_valid
+    valid = version_valid && hash_valid && affine_valid && cones_valid && objective_valid
     status = valid ? VALIDATED_PRIMAL_FEASIBLE : CERTIFICATE_CHECK_FAILED
     report = CertificateCheckReport(
         valid,
@@ -165,10 +159,7 @@ function _certificate_check_affine(
                     x[column]
             end
             if !iszero(residual)
-                push!(
-                    messages,
-                    "affine equation $row failed with exact residual $residual",
-                )
+                push!(messages, "affine equation $row failed with exact residual $residual")
                 return false
             end
         end

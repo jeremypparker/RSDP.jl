@@ -3,7 +3,7 @@ import MathOptInterface as MOI
 
 const MOIU = MOI.Utilities
 
-function _scalar_affine(terms, constant=0)
+function _scalar_affine(terms, constant = 0)
     Q = Rational{BigInt}
     return MOI.ScalarAffineFunction{Q}(
         MOI.ScalarAffineTerm{Q}[
@@ -18,10 +18,8 @@ function _vector_affine(terms, constants)
     Q = Rational{BigInt}
     return MOI.VectorAffineFunction{Q}(
         MOI.VectorAffineTerm{Q}[
-            MOI.VectorAffineTerm(
-                output,
-                MOI.ScalarAffineTerm(Q(coefficient), variable),
-            ) for (output, coefficient, variable) in terms
+            MOI.VectorAffineTerm(output, MOI.ScalarAffineTerm(Q(coefficient), variable)) for
+            (output, coefficient, variable) in terms
         ],
         Q.(constants),
     )
@@ -39,11 +37,8 @@ end
         MOI.VectorOfVariables([x[1], x[2], x[1]]),
         MOI.PositiveSemidefiniteConeTriangle(2),
     )
-    nonnegative_variables = MOI.add_constraint(
-        model,
-        MOI.VectorOfVariables([x[2], x[1]]),
-        MOI.Nonnegatives(2),
-    )
+    nonnegative_variables =
+        MOI.add_constraint(model, MOI.VectorOfVariables([x[2], x[1]]), MOI.Nonnegatives(2))
     equality = MOI.add_constraint(
         model,
         _scalar_affine([(1, x[1]), (2, x[2])], 1),
@@ -51,21 +46,10 @@ end
     )
     psd_affine = MOI.add_constraint(
         model,
-        _vector_affine(
-            [
-                (1, 1, x[1]),
-                (2, 1, x[2]),
-                (3, 1, x[1]),
-            ],
-            [0, 0, 1],
-        ),
+        _vector_affine([(1, 1, x[1]), (2, 1, x[2]), (3, 1, x[1])], [0, 0, 1]),
         MOI.PositiveSemidefiniteConeTriangle(2),
     )
-    zero_variables = MOI.add_constraint(
-        model,
-        MOI.VectorOfVariables([x[2]]),
-        MOI.Zeros(1),
-    )
+    zero_variables = MOI.add_constraint(model, MOI.VectorOfVariables([x[2]]), MOI.Zeros(1))
     nonnegative_affine = MOI.add_constraint(
         model,
         _vector_affine([(1, 1, x[1]), (2, 2, x[2])], [1, -1]),
@@ -73,23 +57,12 @@ end
     )
     zero_affine = MOI.add_constraint(
         model,
-        _vector_affine(
-            [
-                (1, 1, x[1]),
-                (1, -1, x[2]),
-                (2, 3, x[2]),
-            ],
-            [2, -1],
-        ),
+        _vector_affine([(1, 1, x[1]), (1, -1, x[2]), (2, 3, x[2])], [2, -1]),
         MOI.Zeros(2),
     )
     objective = _scalar_affine([(2, x[1]), (-3, x[2])], 5)
     MOI.set(model, MOI.ObjectiveSense(), MOI.MIN_SENSE)
-    MOI.set(
-        model,
-        MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Q}}(),
-        objective,
-    )
+    MOI.set(model, MOI.ObjectiveFunction{MOI.ScalarAffineFunction{Q}}(), objective)
 
     extracted = RSDP.extract_moi(model)
 
@@ -111,8 +84,7 @@ end
     @test RSDP.num_constraints(extracted) == 14
     @test RSDP.num_variables(extracted) == 14
 
-    @test extracted.block_columns ==
-          [1:2, 3:4, 5:6, 7:8, 9:11, 12:14]
+    @test extracted.block_columns == [1:2, 3:4, 5:6, 7:8, 9:11, 12:14]
     @test extracted.block_sources == [
         :moi_variable_positive_parts,
         :moi_variable_negative_parts,
@@ -198,40 +170,25 @@ end
     )
     @test_throws RSDP.InexactDataError RSDP.extract_moi(float_model)
 
-    decimal = RSDP.extract_moi(
-        float_model;
-        policy=RSDP.DecimalStringInexact(),
-    )
+    decimal = RSDP.extract_moi(float_model; policy = RSDP.DecimalStringInexact())
     @test decimal.A == Q[1//10 -1//10]
     @test decimal.b == Q[1//10]
     @test decimal.c == Q[1//2, -1//2]
 
-    binary = RSDP.extract_moi(
-        float_model;
-        policy=RSDP.RationalizeInexact(0.0),
-    )
-    @test binary.A[1, 1] ==
-          Q(BigInt(3602879701896397), BigInt(36028797018963968))
+    binary = RSDP.extract_moi(float_model; policy = RSDP.RationalizeInexact(0.0))
+    @test binary.A[1, 1] == Q(BigInt(3602879701896397), BigInt(36028797018963968))
 end
 
 @testset "strictly reject unsupported MOI forms" begin
     Q = Rational{BigInt}
     constraint_model = MOIU.Model{Q}()
     x = MOI.add_variable(constraint_model)
-    MOI.add_constraint(
-        constraint_model,
-        _scalar_affine([(1, x)]),
-        MOI.LessThan(Q(1)),
-    )
+    MOI.add_constraint(constraint_model, _scalar_affine([(1, x)]), MOI.LessThan(Q(1)))
     @test_throws RSDP.InvalidProblemError RSDP.extract_moi(constraint_model)
 
     objective_model = MOIU.Model{Q}()
     y = MOI.add_variable(objective_model)
     MOI.set(objective_model, MOI.ObjectiveSense(), MOI.MIN_SENSE)
-    MOI.set(
-        objective_model,
-        MOI.ObjectiveFunction{MOI.VariableIndex}(),
-        y,
-    )
+    MOI.set(objective_model, MOI.ObjectiveFunction{MOI.VariableIndex}(), y)
     @test_throws RSDP.InvalidProblemError RSDP.extract_moi(objective_model)
 end

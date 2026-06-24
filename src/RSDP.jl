@@ -18,6 +18,7 @@ include("ConeChecks.jl")
 include("Certificates.jl")
 include("CertificateCheckers.jl")
 include("RationalRecovery.jl")
+include("NumericalOracles.jl")
 include("MOIExtraction.jl")
 
 export SolveStatus,
@@ -91,6 +92,12 @@ export SolveStatus,
     objective_value,
     check_cones,
     ExactPrimalCertificate,
-    ValidationReport
+    ValidationReport,
+    AbstractNumericalOracle,
+    HypatiaOracle,
+    NumericalOracleResult,
+    OracleValidationResult,
+    solve_oracle,
+    validate_with_oracle
 
 end

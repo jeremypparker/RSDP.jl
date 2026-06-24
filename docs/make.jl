@@ -1,21 +1,26 @@
 using RSDP
 using Documenter
 
-DocMeta.setdocmeta!(RSDP, :DocTestSetup, :(using RSDP); recursive=true)
+DocMeta.setdocmeta!(RSDP, :DocTestSetup, :(using RSDP); recursive = true)
 
 makedocs(;
-    modules=[RSDP],
-    authors="RSDP contributors",
-    sitename="RSDP.jl",
-    remotes=nothing,
-    format=Documenter.HTML(;
-        canonical="https://jeremypparker.github.io/RSDP.jl",
-        edit_link="master",
-        assets=String[],
+    modules = [RSDP],
+    authors = "RSDP contributors",
+    sitename = "RSDP.jl",
+    build = get(ENV, "RSDP_DOCS_BUILD", "build"),
+    remotes = nothing,
+    format = Documenter.HTML(;
+        canonical = "https://jeremypparker.github.io/RSDP.jl",
+        edit_link = "master",
+        assets = String[],
     ),
-    pages=[
+    pages = [
         "Home" => "index.md",
         "Quick start" => "quickstart.md",
+        "Tutorials" => [
+            "JuMP rational SDP" => "tutorials/jump_rational_sdp.md",
+            "Ordinary sum of squares" => "tutorials/ordinary_sos.md",
+        ],
         "Manual" => [
             "Statuses and diagnostics" => "manual/statuses.md",
             "Exactification" => "manual/exactification.md",
@@ -37,7 +42,4 @@ makedocs(;
     ],
 )
 
-deploydocs(;
-    repo="github.com/jeremypparker/RSDP.jl",
-    devbranch="master",
-)
+deploydocs(; repo = "github.com/jeremypparker/RSDP.jl", devbranch = "master")

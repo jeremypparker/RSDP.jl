@@ -13,25 +13,22 @@ to higher-level cone metadata; this core stores `x` as a flat vector.
 struct ExactConicProblem
     A::Matrix{ExactScalar}
     b::Vector{ExactScalar}
-    c::Union{Nothing,Vector{ExactScalar}}
-    cones::Union{Nothing,AbstractConeBlock}
+    c::Union{Nothing, Vector{ExactScalar}}
+    cones::Union{Nothing, AbstractConeBlock}
     exactification_policy::AbstractInexactPolicy
-    metadata::Dict{Symbol,Any}
+    metadata::Dict{Symbol, Any}
 
     function ExactConicProblem(
         A::Matrix{ExactScalar},
         b::Vector{ExactScalar},
-        c::Union{Nothing,Vector{ExactScalar}},
-        cones::Union{Nothing,AbstractConeBlock},
+        c::Union{Nothing, Vector{ExactScalar}},
+        cones::Union{Nothing, AbstractConeBlock},
         exactification_policy::AbstractInexactPolicy,
-        metadata::Dict{Symbol,Any},
+        metadata::Dict{Symbol, Any},
     )
-        size(A, 1) == length(b) ||
-            throw(
-                InvalidProblemError(
-                    "A has $(size(A, 1)) rows but b has length $(length(b))",
-                ),
-            )
+        size(A, 1) == length(b) || throw(
+            InvalidProblemError("A has $(size(A, 1)) rows but b has length $(length(b))"),
+        )
         isnothing(c) ||
             size(A, 2) == length(c) ||
             throw(
@@ -61,23 +58,23 @@ end
 function ExactConicProblem(
     A::AbstractMatrix,
     b::AbstractVector;
-    c=nothing,
-    objective=c,
-    cones::Union{Nothing,AbstractConeBlock}=nothing,
-    policy::AbstractInexactPolicy=DEFAULT_INEXACT_POLICY,
-    metadata::AbstractDict{Symbol}=Dict{Symbol,Any}(),
+    c = nothing,
+    objective = c,
+    cones::Union{Nothing, AbstractConeBlock} = nothing,
+    policy::AbstractInexactPolicy = DEFAULT_INEXACT_POLICY,
+    metadata::AbstractDict{Symbol} = Dict{Symbol, Any}(),
 )
-    exact_A = exactify(A, policy; context="A")
-    exact_b = vec(exactify(b, policy; context="b"))
+    exact_A = exactify(A, policy; context = "A")
+    exact_b = vec(exactify(b, policy; context = "b"))
     exact_c =
-        isnothing(objective) ? nothing : vec(exactify(objective, policy; context="c"))
+        isnothing(objective) ? nothing : vec(exactify(objective, policy; context = "c"))
     return ExactConicProblem(
         exact_A,
         exact_b,
         exact_c,
         cones,
         policy,
-        Dict{Symbol,Any}(metadata),
+        Dict{Symbol, Any}(metadata),
     )
 end
 
@@ -85,25 +82,25 @@ ExactConicProblem(
     A::AbstractMatrix,
     b::AbstractVector,
     c::AbstractVector;
-    policy::AbstractInexactPolicy=DEFAULT_INEXACT_POLICY,
-) = ExactConicProblem(A, b; c=c, policy=policy)
+    policy::AbstractInexactPolicy = DEFAULT_INEXACT_POLICY,
+) = ExactConicProblem(A, b; c = c, policy = policy)
 
 function ExactConicProblem(
     A::AbstractMatrix,
     b::AbstractVector,
     cones::AbstractVector{<:AbstractConeBlock};
-    objective=nothing,
-    c=objective,
-    policy::AbstractInexactPolicy=DEFAULT_INEXACT_POLICY,
-    metadata::AbstractDict{Symbol}=Dict{Symbol,Any}(),
+    objective = nothing,
+    c = objective,
+    policy::AbstractInexactPolicy = DEFAULT_INEXACT_POLICY,
+    metadata::AbstractDict{Symbol} = Dict{Symbol, Any}(),
 )
     return ExactConicProblem(
         A,
         b;
-        c=c,
-        cones=ProductConeBlock(cones),
-        policy=policy,
-        metadata=metadata,
+        c = c,
+        cones = ProductConeBlock(cones),
+        policy = policy,
+        metadata = metadata,
     )
 end
 
@@ -111,37 +108,45 @@ function ExactConicProblem(
     A::AbstractMatrix,
     b::AbstractVector,
     cone::AbstractConeBlock;
-    objective=nothing,
-    c=objective,
-    policy::AbstractInexactPolicy=DEFAULT_INEXACT_POLICY,
-    metadata::AbstractDict{Symbol}=Dict{Symbol,Any}(),
+    objective = nothing,
+    c = objective,
+    policy::AbstractInexactPolicy = DEFAULT_INEXACT_POLICY,
+    metadata::AbstractDict{Symbol} = Dict{Symbol, Any}(),
 )
     return ExactConicProblem(
         A,
         b;
-        c=c,
-        cones=cone,
-        policy=policy,
-        metadata=metadata,
+        c = c,
+        cones = cone,
+        policy = policy,
+        metadata = metadata,
     )
 end
 
-"""Return the number of scalar equality constraints."""
+"""
+Return the number of scalar equality constraints.
+"""
 num_constraints(problem::ExactConicProblem) = size(problem.A, 1)
 
-"""Return the number of flat cone-coordinate variables."""
+"""
+Return the number of flat cone-coordinate variables.
+"""
 num_variables(problem::ExactConicProblem) = size(problem.A, 2)
 
-"""Return the exact scalar objective at `x`, or `nothing` for feasibility problems."""
+"""
+Return the exact scalar objective at `x`, or `nothing` for feasibility problems.
+"""
 function objective_value(problem::ExactConicProblem, x::AbstractVector)
     isnothing(problem.c) && return nothing
-    exact_x = vec(exactify(x; context="x"))
+    exact_x = vec(exactify(x; context = "x"))
     length(exact_x) == num_variables(problem) ||
         throw(DimensionMismatch("objective point has the wrong dimension"))
     return dot(problem.c, exact_x)
 end
 
-"""Return a deterministic SHA-256 fingerprint of exact problem data."""
+"""
+Return a deterministic SHA-256 fingerprint of exact problem data.
+"""
 function problem_hash(problem::ExactConicProblem)
     io = IOBuffer()
     show(io, MIME("text/plain"), problem.A)
@@ -186,10 +191,14 @@ struct ExactAffineSolution
     end
 end
 
-"""Return the affine dimension of `solution`."""
+"""
+Return the affine dimension of `solution`.
+"""
 affine_dimension(solution::ExactAffineSolution) = size(solution.nullspace, 2)
 
-"""Return `true` when an affine solution consists of one point."""
+"""
+Return `true` when an affine solution consists of one point.
+"""
 is_unique(solution::ExactAffineSolution) = affine_dimension(solution) == 0
 
 """
@@ -200,18 +209,17 @@ distinguished particular solution.
 """
 function affine_point(
     solution::ExactAffineSolution,
-    parameters::AbstractVector=zeros(ExactScalar, affine_dimension(solution)),
+    parameters::AbstractVector = zeros(ExactScalar, affine_dimension(solution)),
     ;
-    policy::AbstractInexactPolicy=DEFAULT_INEXACT_POLICY,
+    policy::AbstractInexactPolicy = DEFAULT_INEXACT_POLICY,
 )
-    length(parameters) == affine_dimension(solution) ||
-        throw(
-            DimensionMismatch(
-                "expected $(affine_dimension(solution)) affine parameters, " *
-                "got $(length(parameters))",
-            ),
-        )
-    exact_parameters = exactify(parameters, policy; context="parameters")
+    length(parameters) == affine_dimension(solution) || throw(
+        DimensionMismatch(
+            "expected $(affine_dimension(solution)) affine parameters, " *
+            "got $(length(parameters))",
+        ),
+    )
+    exact_parameters = exactify(parameters, policy; context = "parameters")
     return solution.particular + solution.nullspace * exact_parameters
 end
 
@@ -223,12 +231,12 @@ by exact affine solving.
 """
 struct ExactAffineResult
     status::SolveStatus
-    solution::Union{Nothing,ExactAffineSolution}
+    solution::Union{Nothing, ExactAffineSolution}
     diagnostics::AffineDiagnostics
 
     function ExactAffineResult(
         status::SolveStatus,
-        solution::Union{Nothing,ExactAffineSolution},
+        solution::Union{Nothing, ExactAffineSolution},
         diagnostics::AffineDiagnostics,
     )
         if status == FEASIBLE && isnothing(solution)

@@ -1,4 +1,6 @@
-"""Abstract supertype for errors raised by RSDP."""
+"""
+Abstract supertype for errors raised by RSDP.
+"""
 abstract type RSDPError <: Exception end
 
 """
@@ -17,7 +19,9 @@ end
 InexactDataError(value, policy, context::AbstractString, reason::AbstractString) =
     InexactDataError(value, policy, String(context), String(reason))
 
-"""Compatibility alias for [`InexactDataError`](@ref)."""
+"""
+Compatibility alias for [`InexactDataError`](@ref).
+"""
 const InexactConversionError = InexactDataError
 
 function Base.showerror(io::IO, err::InexactDataError)

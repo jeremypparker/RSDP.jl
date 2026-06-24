@@ -30,3 +30,8 @@ belongs to the product cone.
 For an approximate point, use `recover_primal_certificate`. Recovery can fail even
 when a nearby real feasible point exists; failure is reported rather than promoted to
 a mathematical claim.
+
+With the optional Hypatia dependency loaded, `validate_with_oracle(problem,
+HypatiaOracle())` performs numerical hint generation, rational recovery, and
+the same independent exact certificate check. It validates primal feasibility,
+not optimality.

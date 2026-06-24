@@ -1,10 +1,16 @@
-"""Exact scalar type used throughout RSDP."""
+"""
+Exact scalar type used throughout RSDP.
+"""
 const ExactScalar = Rational{BigInt}
 
-"""Abstract supertype for policies controlling conversion of inexact data."""
+"""
+Abstract supertype for policies controlling conversion of inexact data.
+"""
 abstract type AbstractInexactPolicy end
 
-"""Compatibility alias for [`AbstractInexactPolicy`](@ref)."""
+"""
+Compatibility alias for [`AbstractInexactPolicy`](@ref).
+"""
 const InexactPolicy = AbstractInexactPolicy
 
 """
@@ -27,7 +33,7 @@ struct RationalizeInexact{T} <: AbstractInexactPolicy
     tolerance::T
 end
 
-function RationalizeInexact(; tolerance=nothing, tol=nothing)
+function RationalizeInexact(; tolerance = nothing, tol = nothing)
     if !isnothing(tolerance) && !isnothing(tol)
         throw(ArgumentError("specify only one of tolerance and tol"))
     end
@@ -39,8 +45,7 @@ function RationalizeInexact(; tolerance=nothing, tol=nothing)
 end
 
 function RationalizeInexact(tolerance::Real)
-    isfinite(tolerance) ||
-        throw(ArgumentError("rationalization tolerance must be finite"))
+    isfinite(tolerance) || throw(ArgumentError("rationalization tolerance must be finite"))
     tolerance >= zero(tolerance) ||
         throw(ArgumentError("rationalization tolerance must be nonnegative"))
     return RationalizeInexact{typeof(tolerance)}(tolerance)
@@ -55,7 +60,9 @@ representation of its binary floating-point payload.
 """
 struct DecimalStringInexact <: AbstractInexactPolicy end
 
-"""The strict policy used when no inexact-input policy is supplied."""
+"""
+The strict policy used when no inexact-input policy is supplied.
+"""
 const DEFAULT_INEXACT_POLICY = ErrorOnInexact()
 
 """
@@ -65,22 +72,18 @@ Convert a scalar or array to [`ExactScalar`](@ref). Integer, rational, and
 decimal-string inputs are exact and are always accepted. Inexact numeric input
 is handled according to `policy`, which defaults to [`ErrorOnInexact`](@ref).
 """
-exactify(value; policy::AbstractInexactPolicy=DEFAULT_INEXACT_POLICY, context="value") =
-    exactify(value, policy; context=context)
+exactify(value; policy::AbstractInexactPolicy = DEFAULT_INEXACT_POLICY, context = "value") =
+    exactify(value, policy; context = context)
 
-exactify(value::ExactScalar, ::AbstractInexactPolicy; context="value") = value
+exactify(value::ExactScalar, ::AbstractInexactPolicy; context = "value") = value
 
-exactify(value::Integer, ::AbstractInexactPolicy; context="value") =
+exactify(value::Integer, ::AbstractInexactPolicy; context = "value") =
     BigInt(value) // BigInt(1)
 
-exactify(value::Rational, ::AbstractInexactPolicy; context="value") =
+exactify(value::Rational, ::AbstractInexactPolicy; context = "value") =
     BigInt(numerator(value)) // BigInt(denominator(value))
 
-function exactify(
-    value::AbstractFloat,
-    policy::ErrorOnInexact;
-    context="value",
-)
+function exactify(value::AbstractFloat, policy::ErrorOnInexact; context = "value")
     throw(
         InexactDataError(
             value,
@@ -91,39 +94,27 @@ function exactify(
     )
 end
 
-function exactify(
-    value::AbstractFloat,
-    policy::RationalizeInexact;
-    context="value",
-)
+function exactify(value::AbstractFloat, policy::RationalizeInexact; context = "value")
     isfinite(value) ||
         throw(InexactDataError(value, policy, context, "value must be finite"))
     value == zero(value) && return zero(ExactScalar)
     if isnothing(policy.tolerance)
         return rationalize(BigInt, value)
     end
-    return rationalize(BigInt, value; tol=policy.tolerance)
+    return rationalize(BigInt, value; tol = policy.tolerance)
 end
 
-function exactify(
-    value::AbstractFloat,
-    policy::DecimalStringInexact;
-    context="value",
-)
+function exactify(value::AbstractFloat, policy::DecimalStringInexact; context = "value")
     isfinite(value) ||
         throw(InexactDataError(value, policy, context, "value must be finite"))
     return _parse_exact_decimal(string(value), policy, context)
 end
 
-function exactify(
-    value::AbstractString,
-    policy::AbstractInexactPolicy;
-    context="value",
-)
+function exactify(value::AbstractString, policy::AbstractInexactPolicy; context = "value")
     return _parse_exact_decimal(value, policy, context)
 end
 
-function exactify(value::Real, policy::AbstractInexactPolicy; context="value")
+function exactify(value::Real, policy::AbstractInexactPolicy; context = "value")
     throw(
         InexactDataError(
             value,
@@ -134,7 +125,7 @@ function exactify(value::Real, policy::AbstractInexactPolicy; context="value")
     )
 end
 
-function exactify(value, policy::AbstractInexactPolicy; context="value")
+function exactify(value, policy::AbstractInexactPolicy; context = "value")
     throw(
         InexactDataError(
             value,
@@ -145,15 +136,11 @@ function exactify(value, policy::AbstractInexactPolicy; context="value")
     )
 end
 
-function exactify(
-    values::AbstractArray,
-    policy::AbstractInexactPolicy;
-    context="array",
-)
+function exactify(values::AbstractArray, policy::AbstractInexactPolicy; context = "array")
     result = Array{ExactScalar}(undef, size(values))
     for index in CartesianIndices(values)
         location = string(context, "[", join(Tuple(index), ","), "]")
-        result[index] = exactify(values[index], policy; context=location)
+        result[index] = exactify(values[index], policy; context = location)
     end
     return result
 end
@@ -167,38 +154,27 @@ function _parse_exact_decimal(
     isempty(text) &&
         throw(InexactDataError(source, policy, context, "empty numeric string"))
 
-    slash_parts = split(text, '/'; limit=2)
+    slash_parts = split(text, '/'; limit = 2)
     if length(slash_parts) == 2
         try
             numerator_value = parse(BigInt, strip(slash_parts[1]))
             denominator_value = parse(BigInt, strip(slash_parts[2]))
-            denominator_value == 0 &&
-                throw(
-                    InexactDataError(
-                        source,
-                        policy,
-                        context,
-                        "rational denominator must be nonzero",
-                    ),
-                )
-            return numerator_value // denominator_value
-        catch err
-            err isa InexactDataError && rethrow()
-            throw(
+            denominator_value == 0 && throw(
                 InexactDataError(
                     source,
                     policy,
                     context,
-                    "invalid rational string",
+                    "rational denominator must be nonzero",
                 ),
             )
+            return numerator_value // denominator_value
+        catch err
+            err isa InexactDataError && rethrow()
+            throw(InexactDataError(source, policy, context, "invalid rational string"))
         end
     end
 
-    matched = match(
-        r"^([+-]?)(?:(\d+)(?:\.(\d*))?|\.(\d+))(?:[eE]([+-]?\d+))?$",
-        text,
-    )
+    matched = match(r"^([+-]?)(?:(\d+)(?:\.(\d*))?|\.(\d+))(?:[eE]([+-]?\d+))?$", text)
     isnothing(matched) &&
         throw(InexactDataError(source, policy, context, "invalid decimal string"))
 
@@ -212,11 +188,20 @@ function _parse_exact_decimal(
     else
         fractional_digits_1
     end
-    exponent = isnothing(exponent_text) ? 0 : try
-        parse(Int, exponent_text)
-    catch
-        throw(InexactDataError(source, policy, context, "decimal exponent is out of range"))
-    end
+    exponent =
+        isnothing(exponent_text) ? 0 :
+        try
+            parse(Int, exponent_text)
+        catch
+            throw(
+                InexactDataError(
+                    source,
+                    policy,
+                    context,
+                    "decimal exponent is out of range",
+                ),
+            )
+        end
 
     coefficient = parse(BigInt, string(integer_part, fractional_part))
     sign_text == "-" && (coefficient = -coefficient)

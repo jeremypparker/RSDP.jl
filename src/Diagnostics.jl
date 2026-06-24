@@ -29,18 +29,20 @@ struct AffineDiagnostics
         m >= 0 || throw(ArgumentError("row_count must be nonnegative"))
         n >= 0 || throw(ArgumentError("variable_count must be nonnegative"))
         0 <= r <= min(m, n) || throw(ArgumentError("rank is out of range"))
-        r <= ar <= min(m, n + 1) ||
-            throw(ArgumentError("augmented_rank is out of range"))
+        r <= ar <= min(m, n + 1) || throw(ArgumentError("augmented_rank is out of range"))
         pivots = Int[p for p in pivot_columns]
         free = Int[p for p in free_columns]
         new(m, n, r, ar, pivots, free)
     end
 end
 
-"""Return the dimension of the nullspace recorded by `diagnostics`."""
-nullity(diagnostics::AffineDiagnostics) =
-    diagnostics.variable_count - diagnostics.rank
+"""
+Return the dimension of the nullspace recorded by `diagnostics`.
+"""
+nullity(diagnostics::AffineDiagnostics) = diagnostics.variable_count - diagnostics.rank
 
-"""Return `true` when the recorded system is consistent."""
+"""
+Return `true` when the recorded system is consistent.
+"""
 is_consistent(diagnostics::AffineDiagnostics) =
     diagnostics.rank == diagnostics.augmented_rank

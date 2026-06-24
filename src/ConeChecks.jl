@@ -1,9 +1,5 @@
 export ConeMembershipDiagnostic,
-    ConeMembershipResult,
-    check_cone_membership,
-    check_cone,
-    check_cones,
-    in_cone
+    ConeMembershipResult, check_cone_membership, check_cone, check_cones, in_cone
 
 """
     ConeMembershipDiagnostic
@@ -16,8 +12,8 @@ struct ConeMembershipDiagnostic
     code::Symbol
     message::String
     path::Vector{Int}
-    index::Union{Nothing,Int}
-    psd_result::Union{Nothing,PSDCheckResult}
+    index::Union{Nothing, Int}
+    psd_result::Union{Nothing, PSDCheckResult}
 end
 
 """
@@ -45,8 +41,8 @@ function _cone_diagnostic(
     code::Symbol,
     message::String,
     path::Vector{Int};
-    index::Union{Nothing,Int}=nothing,
-    psd_result::Union{Nothing,PSDCheckResult}=nothing,
+    index::Union{Nothing, Int} = nothing,
+    psd_result::Union{Nothing, PSDCheckResult} = nothing,
 )
     return ConeMembershipDiagnostic(code, message, copy(path), index, psd_result)
 end
@@ -63,7 +59,7 @@ function _cone_exact_values(values::AbstractVector, path::Vector{Int})
                 "coordinate $index has non-exact type $(typeof(values[index])); " *
                 "use integers or rationals",
                 path;
-                index=Int(index),
+                index = Int(index),
             )
             return nothing, diagnostic
         end
@@ -103,7 +99,7 @@ function _check_cone_membership(
         :nonzero_in_zero_cone,
         "zero-cone coordinate $bad_index is nonzero",
         path;
-        index=bad_index,
+        index = bad_index,
     )
     return ConeMembershipResult(false, [failure])
 end
@@ -126,7 +122,7 @@ function _check_cone_membership(
         :negative_coordinate,
         "nonnegative-cone coordinate $bad_index is negative",
         path;
-        index=bad_index,
+        index = bad_index,
     )
     return ConeMembershipResult(false, [failure])
 end
@@ -150,8 +146,8 @@ function _check_cone_membership(
         :not_positive_semidefinite,
         psd_result.diagnostic.message,
         path;
-        index=psd_result.diagnostic.index,
-        psd_result=psd_result,
+        index = psd_result.diagnostic.index,
+        psd_result = psd_result,
     )
     return ConeMembershipResult(false, [failure])
 end
@@ -168,7 +164,7 @@ function _check_cone_membership(
     offset = 0
     for (component_index, component) in enumerate(block.blocks)
         component_dimension = dimension(component)
-        component_values = view(values, (offset + 1):(offset + component_dimension))
+        component_values = view(values, (offset+1):(offset+component_dimension))
         component_path = vcat(path, component_index)
         result = _check_cone_membership(component, component_values, component_path)
         append!(diagnostics, result.diagnostics)
@@ -187,7 +183,9 @@ function check_cone_membership(block::AbstractConeBlock, values::AbstractVector)
     return _check_cone_membership(block, values, Int[])
 end
 
-"""Alias for [`check_cone_membership`](@ref)."""
+"""
+Alias for [`check_cone_membership`](@ref).
+"""
 check_cone(block::AbstractConeBlock, values::AbstractVector) =
     check_cone_membership(block, values)
 
@@ -200,12 +198,12 @@ check_cones(block::AbstractConeBlock, values::AbstractVector) =
     check_cone_membership(block, values)
 check_cones(blocks::Tuple, values::AbstractVector) =
     check_cone_membership(ProductConeBlock(blocks), values)
-check_cones(
-    blocks::AbstractVector{<:AbstractConeBlock},
-    values::AbstractVector,
-) = check_cone_membership(ProductConeBlock(blocks), values)
+check_cones(blocks::AbstractVector{<:AbstractConeBlock}, values::AbstractVector) =
+    check_cone_membership(ProductConeBlock(blocks), values)
 
-"""Return only the Boolean outcome of [`check_cone_membership`](@ref)."""
+"""
+Return only the Boolean outcome of [`check_cone_membership`](@ref).
+"""
 in_cone(block::AbstractConeBlock, values::AbstractVector) =
     check_cone_membership(block, values).is_member
 
@@ -215,7 +213,6 @@ in_cone(block::AbstractConeBlock, values::AbstractVector) =
 Check a problem's full product-cone membership exactly.
 """
 function check_cones(problem::ExactConicProblem, values::AbstractVector)
-    isnothing(problem.cones) &&
-        throw(InvalidProblemError("problem has no cone metadata"))
+    isnothing(problem.cones) && throw(InvalidProblemError("problem has no cone metadata"))
     return check_cone_membership(problem.cones, values)
 end
