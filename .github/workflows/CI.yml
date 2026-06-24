@@ -53,6 +53,7 @@ jobs:
         with:
           version: nightly
       - uses: julia-actions/cache@v2
+      - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
   docs:
     name: Documentation
@@ -68,14 +69,26 @@ jobs:
           version: '1'
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
-      - name: Run JuMP and SumOfSquares integration examples
+      - name: Run JuMP rational SDP example
         shell: julia --project=docs --color=yes {0}
         run: |
           using Pkg
           Pkg.develop(PackageSpec(path=pwd()))
           Pkg.instantiate()
           using Test
-          include("test/test_docs_examples.jl")
+          result = include("examples/jump_rational_sdp.jl")
+          @test result.certificate !== nothing
+          @test result.report.ok
+      - name: Run SumOfSquares example
+        shell: julia --project=docs --color=yes {0}
+        run: |
+          using Pkg
+          Pkg.develop(PackageSpec(path=pwd()))
+          Pkg.instantiate()
+          using Test
+          result = include("examples/ordinary_sos.jl")
+          @test result.certificate !== nothing
+          @test result.report.ok
       - uses: julia-actions/julia-docdeploy@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
