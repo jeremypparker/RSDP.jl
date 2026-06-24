@@ -97,7 +97,7 @@ function solve_oracle(
     oracle::AbstractNumericalOracle;
     kwargs...,
 )
-    message = "no numerical implementation is loaded for oracle $(typeof(oracle))"
+    message = "numerical implementation is not loaded for oracle $(typeof(oracle))"
     return NumericalOracleResult(
         NUMERICAL_ORACLE_FAILED;
         raw_status = :implementation_not_loaded,
@@ -222,7 +222,21 @@ function validate_with_oracle(
         return OracleValidationResult(oracle_result, nothing, report, diagnostics)
     end
 
-    report = check_certificate(problem, certificate; diagnostics = true)
+    report = try
+        check_certificate(problem, certificate; diagnostics = true)
+    catch error
+        push!(
+            diagnostics,
+            "exact certificate checker threw an exception: $(sprint(showerror, error))",
+        )
+        failed_report = _failed_validation_report(CERTIFICATE_CHECK_FAILED, diagnostics)
+        return OracleValidationResult(
+            oracle_result,
+            certificate,
+            failed_report,
+            diagnostics,
+        )
+    end
     append!(diagnostics, report.diagnostics)
     report.ok || push!(diagnostics, "independent exact certificate checking failed")
     return OracleValidationResult(oracle_result, certificate, report, diagnostics)

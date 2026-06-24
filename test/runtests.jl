@@ -12,6 +12,7 @@ using Test
     include("test_rational_recovery.jl")
     include("test_numerical_oracles.jl")
     include("test_hypatia_oracle.jl")
+    include("test_docs_examples.jl")
     include("test_spike1.jl")
     include("test_moi_extraction.jl")
     include("test_spike2.jl")

@@ -17,6 +17,7 @@ RSDP.dimension(::UnsupportedOracleCone) = 1
     @test nonnegative.certificate !== nothing
     @test nonnegative.certificate.x == Q[1//2]
     @test nonnegative.report.ok
+    @test nonnegative.report.status == RSDP.VALIDATED_PRIMAL_FEASIBLE
 
     # The packed order is (1,1), (1,2), (2,2), matching MOI's triangle cone.
     psd_point = Q[1, 1//2, 1]

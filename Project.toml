@@ -18,21 +18,38 @@ RSDPHypatiaExt = "Hypatia"
 
 [compat]
 Aqua = "0.8"
+DynamicPolynomials = "0.6"
 Hypatia = "0.9, 0.10"
 JET = "0.11"
+JuMP = "1"
 LinearAlgebra = "1.10"
 Logging = "1.10"
 MathOptInterface = "1"
+MultivariatePolynomials = "0.5"
 SHA = "0.7"
 SparseArrays = "1.10"
+SumOfSquares = "0.7, 0.8"
 Test = "1.10"
 julia = "1.12"
 
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
+DynamicPolynomials = "7c1d4256-1411-5781-91ec-d7bc3513ac07"
 Hypatia = "b99e6be6-89ff-11e8-14f8-45c827f4f8f2"
 JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
+JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
+MultivariatePolynomials = "102ac46a-7ee4-5c85-9060-abc95bfdeaa3"
+SumOfSquares = "4b9e565b-77fc-50a5-a571-1244f986bda1"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Aqua", "Hypatia", "JET", "Test"]
+test = [
+    "Aqua",
+    "DynamicPolynomials",
+    "Hypatia",
+    "JET",
+    "JuMP",
+    "MultivariatePolynomials",
+    "SumOfSquares",
+    "Test",
+]

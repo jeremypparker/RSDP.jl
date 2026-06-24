@@ -1,9 +1,12 @@
 using Test
 
 struct SuccessfulFakeOracle <: RSDP.AbstractNumericalOracle end
+struct UnimplementedOracle <: RSDP.AbstractNumericalOracle end
 struct MissingPrimalOracle <: RSDP.AbstractNumericalOracle end
 struct WrongDimensionOracle <: RSDP.AbstractNumericalOracle end
+struct NonFiniteOracle <: RSDP.AbstractNumericalOracle end
 struct RecoveryFailureOracle <: RSDP.AbstractNumericalOracle end
+struct ThrowingOracle <: RSDP.AbstractNumericalOracle end
 
 function RSDP.solve_oracle(::RSDP.ExactConicProblem, ::SuccessfulFakeOracle; kwargs...)
     return RSDP.NumericalOracleResult(
@@ -27,14 +30,30 @@ function RSDP.solve_oracle(::RSDP.ExactConicProblem, ::WrongDimensionOracle; kwa
     )
 end
 
+function RSDP.solve_oracle(::RSDP.ExactConicProblem, ::NonFiniteOracle; kwargs...)
+    return RSDP.NumericalOracleResult(
+        RSDP.NUMERICAL_SOLVED_NOT_VALIDATED;
+        primal = [NaN],
+    )
+end
+
 function RSDP.solve_oracle(::RSDP.ExactConicProblem, ::RecoveryFailureOracle; kwargs...)
     return RSDP.NumericalOracleResult(RSDP.NUMERICAL_SOLVED_NOT_VALIDATED; primal = [-0.5])
+end
+
+function RSDP.solve_oracle(::RSDP.ExactConicProblem, ::ThrowingOracle; kwargs...)
+    error("fake solver exception")
 end
 
 @testset "numerical oracle validation orchestration" begin
     Q = RSDP.ExactScalar
     problem =
         RSDP.ExactConicProblem(reshape(Q[1], 1, 1), Q[1//2], RSDP.NonnegativeConeBlock(1))
+
+    unloaded = RSDP.solve_oracle(problem, UnimplementedOracle())
+    @test unloaded.status == RSDP.NUMERICAL_ORACLE_FAILED
+    @test isnothing(unloaded.primal)
+    @test any(contains("not loaded"), unloaded.diagnostics)
 
     success = RSDP.validate_with_oracle(problem, SuccessfulFakeOracle())
     @test success.certificate !== nothing
@@ -52,6 +71,16 @@ end
     @test isnothing(wrong.certificate)
     @test !wrong.report.ok
     @test any(contains("expected 1"), wrong.diagnostics)
+
+    nonfinite = RSDP.validate_with_oracle(problem, NonFiniteOracle())
+    @test isnothing(nonfinite.certificate)
+    @test nonfinite.report.status == RSDP.NUMERICAL_ORACLE_FAILED
+    @test any(contains("finite"), nonfinite.diagnostics)
+
+    thrown = RSDP.validate_with_oracle(problem, ThrowingOracle())
+    @test isnothing(thrown.certificate)
+    @test thrown.oracle_result.status == RSDP.NUMERICAL_ORACLE_FAILED
+    @test any(contains("fake solver exception"), thrown.diagnostics)
 
     recovery =
         RSDP.validate_with_oracle(problem, RecoveryFailureOracle(); atol = 0, rtol = 0)
