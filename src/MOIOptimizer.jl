@@ -183,10 +183,25 @@ function MOI.add_constraint(
     return MOI.add_constraint(optimizer.model, func, set)
 end
 
-MOI.is_valid(optimizer::Optimizer, index) = MOI.is_valid(optimizer.model, index)
-MOI.delete(optimizer::Optimizer, index) = MOI.delete(optimizer.model, index)
-MOI.modify(optimizer::Optimizer, index, change) =
+MOI.is_valid(
+    optimizer::Optimizer,
+    index::Union{MOI.VariableIndex, MOI.ConstraintIndex},
+) = MOI.is_valid(optimizer.model, index)
+MOI.delete(
+    optimizer::Optimizer,
+    index::Union{MOI.VariableIndex, MOI.ConstraintIndex},
+) = MOI.delete(optimizer.model, index)
+MOI.modify(
+    optimizer::Optimizer,
+    index::MOI.ConstraintIndex,
+    change::MOI.AbstractFunctionModification,
+) =
     MOI.modify(optimizer.model, index, change)
+MOI.modify(
+    optimizer::Optimizer,
+    attribute::MOI.ObjectiveFunction,
+    change::MOI.AbstractFunctionModification,
+) = MOI.modify(optimizer.model, attribute, change)
 
 function MOI.supports(optimizer::Optimizer, attribute::MOI.AbstractModelAttribute)
     if attribute isa MOI.ObjectiveFunction
